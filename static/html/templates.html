@@ -1,0 +1,90 @@
+<script type="text/html" id="index">
+  <h2>OBRA Stuff</h2>
+  <div>Result Notifications, Upgrade Points, etc.</div>
+</script>
+
+
+<script type="text/html" id="search">
+  <h2>Search</h2>
+  <div class="alert-warning col-md-8 mx-auto" data-bind="hidden: searchResults().length">
+    No Matching OBRA Members</td>
+  </div>
+  <table class="table table-sm col-md-8 mx-auto" data-bind="visible: searchResults().length">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Team</th>
+      </tr>
+    </thead>
+    <tbody data-bind="foreach: { data: searchResults, as: 'person' }">
+      <tr>
+        <td><a data-bind="attr: { href: '/person/' + person.id }, text: person.name">Name</a></td>
+        <td data-bind="text: person.team_name">Team</td>
+      </tr>
+    </tbody>
+  </table>
+</script>
+
+
+<script type="text/html" id="notifications">
+  <h2>Notifications</h2>
+</script>
+
+<script type="text/html" id="results">
+  <h2>results</h2>
+</script>
+
+<script type="text/html" id="person">
+  <div class="w-100 d-inline-block" data-bind="with: personResults, as: 'person'">
+    <h2 data-bind="text: 'Results for ' + person.name">Results For Name</h2>
+    <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+        data-bind="foreach: { data: person.disciplines, as: 'discipline' }, descendantsComplete: $root.setActivePanel.bind($root, person.disciplines, 'person')">
+      <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+        <a class="nav-link" data-togle="tab" role="tab"
+           data-bind="text: discipline.display,
+                      click: $root.activePanel,
+                      css: { active: discipline === $root.activePanel(), disabled: discipline.results.length == 0 },
+                      attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name }">Discipline</a>
+      </li>
+    </ul>
+    <div class="tab-content w-100" id="discipline-tab-content"
+         data-bind="foreach: { data: person.disciplines, as: 'discipline' }">
+      <div class="tab-pane fade" role="tabpanel"
+           data-bind="attr: { 'id': discipline.name },
+                      css: { active: discipline === $root.activePanel(), show: discipline === $root.activePanel() }">
+        <table class="table table-sm w-100">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Points</th>
+              <th class="d-none d-sm-table-cell">Total Pts</th>
+              <th>Event</th>
+              <th>Race</th>
+              <th class="d-none d-md-table-cell">Category</th>
+              <th class="d-none d-sm-table-cell">Date</th>
+              <th class="d-none d-md-table-cell">Notes</th>
+            </tr>
+          </thead>
+          <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
+            <tr>
+              <td data-bind="text: result.place + '/' + result.race.starters">#</td>
+              <td data-bind="text: result.value">Points</td>
+              <td data-bind="text: result.sum_value" class="d-none d-sm-table-cell">Total Pts</td>
+              <td data-bind="text: result.race.event.name">Event</td>
+              <td data-bind="text: result.race.name">Race</td>
+              <td data-bind="text: result.sum_categories.join('/')" class="d-none d-md-table-cell">Category</td>
+              <td data-bind="text: result.race.date" class="d-none d-sm-table-cell">Date</td>
+              <td data-bind="text: result.notes" class="d-none d-md-table-cell">Notes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>  
+    </div>
+  </div>
+</script>
+
+
+<script type="text/html" id="upgrades">
+  <h2>Upgrades</h2>
+  <div data-bind="with: pageContext">Upgrades for <span data-bind="text: params.discipline">discipline</span></div>
+</script>

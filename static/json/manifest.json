@@ -1,0 +1,15 @@
+{  
+  "name": "OBRA Stuff",  
+  "short_name": "OBRA Stuff",
+  "icons": [{  
+        "src": "/images/obra.png",
+        "sizes": "152x152",
+        "type": "image/png" 
+      }],  
+  "start_url": "/",  
+  "display": "standalone",  
+  "serviceworker": {
+    "src": "/js/serviceworker.js",
+    "scope": "/"
+  }
+}

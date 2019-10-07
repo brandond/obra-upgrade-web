@@ -1,0 +1,35 @@
+uwsgi:
+  master: True
+  need-app: True
+  show-config: True
+  auto-procname: True
+  log-zero: True
+  log-4xx: True
+  log-5xx: True
+  log-sendfile: True
+  log-ioerror: True
+  cache2: name=default,items=4096,bitmap=1,purge_lru=1
+  need-plugins: http,router_static,python3
+  enable-threads: True
+  processes: %k
+  thunder-lock: True
+  chdir: /app
+  virtualenv: /app/venv
+  route: ^/$ static:/app/static/index.html
+  route: ^/notifications$ static:/app/static/index.html
+  route: ^/upgrades/.*$ static:/app/static/index.html
+  route: ^/person/.*$ static:/app/static/index.html
+  route: ^/results/.*$ static:/app/static/index.html
+  route: ^/results$ static:/app/static/index.html
+  route: ^/search$ static:/app/static/index.html
+  check-static: /app/static
+  worker-mount: /=obra-upgrade-web:application
+  static-gzip-all: True
+  http-keepalive: True
+  http-auto-gzip: True
+  http-websockets: True
+  http-chunked-input: True
+  https2: addr=0.0.0.0:8443,cert=$(UWSGI_CERT),key=$(UWSGI_KEY),spdy=1
+  http: 0.0.0.0:8080
+  stats: 0.0.0.0:8081
+  stats-http: True

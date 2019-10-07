@@ -1,0 +1,5 @@
+git+https://github.com/esnme/ultrajson.git@master#egg=ujson
+flask
+flask_caching
+flask_restplus
+obra-upgrade-calculator
