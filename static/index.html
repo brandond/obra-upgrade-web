@@ -17,7 +17,7 @@
     <link rel="icon" sizes="152x152" href="/images/obra.png">
  
     <!-- Add to homescreen for Safari on iOS -->
-    <meta name="apple-mobile-web-app-title" content="OBRA Stuff">
+    <meta name="apple-mobile-web-app-title" content="OBRA Hacks">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="apple-touch-icon-precomposed" href="/images/obra.png">
@@ -26,43 +26,42 @@
     <link rel="manifest" href="/json/manifest.json">
     <base href="/">
 
-    <title>OBRA Stuff</title>
+    <title>OBRA Hacks</title>
   </head>
-
-  <body>
+  <body id="top">
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-      <a class="navbar-brand" href="#">OBRA Stuff</a>
+      <a class="navbar-brand" href="#">OBRA Hacks</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-main" aria-controls="nav-main" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="nav-main">
         <ul class="navbar-nav mr-auto">
+          <!-- Brand button already takes us home, do we need this?
           <li class="nav-item" data-bind="css: {active: pageTemplate() == 'index' }">
             <a class="nav-link" href="/">Home</a>
           </li>
-          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'results' }">
-            <a class="nav-link" href="/results">Results</a>
+          -->
+          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'upgrades' }">
+            <a class="nav-link" href="/upgrades">Upgrades</a>
+          </li>
+          <li class="nav-item" data-bind="css: {active: pageTemplate().startsWith('event') }">
+            <a class="nav-link" href="/events">Event Results</a>
           </li>
           <li class="nav-item" data-bind="css: {active: pageTemplate() == 'notifications' }">
             <a class="nav-link" href="/notifications">Notifications</a>
           </li>
-          <li class="nav-item dropdown" data-bind="css: {active: pageTemplate() == 'upgrades' }">
-            <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Upgrades</a>
-            <div class="dropdown-menu" aria-labelledby="dropdown01" data-bind="foreach: raceDisciplines">
-              <a class="dropdown-item" data-bind="attr: { href: '/upgrades/' + name }, text: display"  href="/upgrades/display">name</a>
-            </div>
-          </li>
         </ul>
         <form class="form-inline my-2 my-lg-0" action="/search" method="get" data-bind="submit: searchSubmit">
-          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="name">
+          <input class="form-control mr-sm-2" type="text" placeholder="Name" aria-label="Search" name="name">
           <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
         </form>
       </div>
     </nav>
 
     <main role="main">
-      <div class="site-content p-0 container" data-bind="template: { name: pageTemplate }"></div>
+      <div class="site-content p-0 container"
+           data-bind="template: { name: pageTemplate }, childrenComplete: scrollToHash"></div>
     </main>
 
     <!-- Optional JavaScript -->
@@ -71,6 +70,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.15.0/umd/popper-utils.min.js" integrity="sha256-Im2+AKXyLBUePRXWElaAnuc37n6egsaypNiAZNMV1t8=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" integrity="sha256-fzFFyH01cBVPYzl16KT40wqjhgPtq6FFUB6ckN2+GGw=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js" integrity="sha256-Tjl7WVgF1hgGMgUKZZfzmxOrtoSf8qltZ9wMujjGNQk=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.3.2/moment-duration-format.min.js" integrity="sha256-M2KULKSJyw+G0068JiMlM9GX4XpLdUButSzBqntKDZM=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/page.js/1.11.5/page.min.js" integrity="sha256-jsTfILjWtwmc5CQkK79KFmJs7NPBHUyliEenUdC5k+c=" crossorigin="anonymous"></script>
     <script src="/js/index.js"></script>
   </body>

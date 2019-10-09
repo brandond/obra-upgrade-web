@@ -1,4 +1,3 @@
-from flask import Flask, request
 from flask_restplus import Resource, fields, marshal
 import logging
 
@@ -10,3 +9,13 @@ def register(api, cache):
     # Now need some way to store it as part of session data or something, but I don't want
     # to require registration...
     ns = api.namespace('notifications', 'Push Notifications')
+
+    response = fields.Integer
+
+    @ns.route('/')
+    @ns.response(200, 'Success', response)
+    @ns.response(400, 'Bad Request')
+    @ns.response(500, 'Server Error')
+    class People(Resource):
+        def get(self):
+            return (marshal(1, response), 200, {'Cache-Control': 'no-cache, no-store'})

@@ -1,4 +1,3 @@
-from flask import Flask, request
 from flask_restplus import Resource, fields, marshal
 from peewee import prefetch, JOIN
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
@@ -7,12 +6,13 @@ from copy import deepcopy
 import logging
 
 logger = logging.getLogger(__name__)
+cache_timeout = 900
 
 
 def register(api, cache):
     ns = api.namespace('results', 'Race Results')
 
-    def fill_results(pdr): 
+    def fill_results(pdr):
         if not pdr['results']:
             return []
         # Default filler point just pulls info from last race category
@@ -29,88 +29,90 @@ def register(api, cache):
         return pdr['results']
 
     # Base stuff and relationships
-    person = ns.model('Person', {
-        'id': fields.Integer,
-        'first_name': fields.String,
-        'last_name': fields.String,
-        'name': fields.String(attribute=lambda p: '{} {}'.format(p.first_name, p.last_name)),
-        })
+    person = ns.model('Person',
+                      {'id': fields.Integer,
+                       'first_name': fields.String,
+                       'last_name': fields.String,
+                       'team_name': fields.String,
+                       'name': fields.String(attribute=lambda p: '{} {}'.format(p.first_name, p.last_name).title() if p else None),
+                       })
 
-    series = ns.model('Series', {
-        'id': fields.Integer,
-        'name': fields.String,
-        })
+    series = ns.model('Series',
+                      {'id': fields.Integer,
+                       'name': fields.String,
+                       })
 
-    event = ns.model('Event', {
-        'id': fields.Integer,
-        'name': fields.String,
-        'year': fields.Integer,
-        'series': fields.Nested(series, allow_null=True),
-        })
+    event = ns.model('Event',
+                     {'id': fields.Integer,
+                      'name': fields.String,
+                      'year': fields.Integer,
+                      'series': fields.Nested(series, allow_null=True),
+                      })
 
-    race = ns.model('Race', {
-        'id': fields.Integer,
-        'name': fields.String,
-        'date': fields.Date,
-        'starters': fields.Integer,
-        'categories': fields.List(fields.Integer),
-        })
+    race = ns.model('Race',
+                    {'id': fields.Integer,
+                     'name': fields.String,
+                     'date': fields.Date,
+                     'starters': fields.Integer,
+                     'categories': fields.List(fields.Integer),
+                     })
 
-    result = ns.model('Result', {
-        'id': fields.Integer,
-        'place': fields.String,
-        'time': fields.Integer,
-        'value': fields.Integer(attribute=lambda r: r.points[0].value if r.points else None),
-        'sum_value': fields.Integer(attribute=lambda r: r.points[0].sum_value if r.points else None),
-        'sum_categories': fields.List(fields.Integer, attribute=lambda r: r.points[0].sum_categories if r.points else None),
-        'notes': fields.String(attribute=lambda r: r.points[0].notes if r.points else None),
-        'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade if r.points else None),
-        })
+    result = ns.model('Result',
+                      {'id': fields.Integer,
+                       'place': fields.String,
+                       'time': fields.Integer,
+                       'laps': fields.Integer,
+                       'value': fields.Integer(attribute=lambda r: r.points[0].value if r.points else None),
+                       'sum_value': fields.Integer(attribute=lambda r: r.points[0].sum_value if r.points else None),
+                       'sum_categories': fields.List(fields.Integer, attribute=lambda r: r.points[0].sum_categories if r.points else None),
+                       'notes': fields.String(attribute=lambda r: r.points[0].notes if r.points else None),
+                       'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade if r.points else None),
+                       })
 
     # Race with extra info for personal results
-    race_with_event = ns.clone('RaceWithEvent', race, {
-        'event': fields.Nested(event),
-        })
+    race_with_event = ns.clone('RaceWithEvent', race,
+                               {'event': fields.Nested(event),
+                                })
 
     # Results for a race - contains person info without race data
-    result_with_person = ns.clone('ResultWithPerson', result, {
-        'person': fields.Nested(person),
-        })
+    result_with_person = ns.clone('ResultWithPerson', result,
+                                  {'person': fields.Nested(person),
+                                   })
 
     # Results for a person - contains event info without person data
-    result_with_race = ns.clone('ResultWithRace', result, {
-        'race': fields.Nested(race_with_event),
-        })
+    result_with_race = ns.clone('ResultWithRace', result,
+                                {'race': fields.Nested(race_with_event),
+                                 })
 
     # Container for grouping of results by race for an event
-    event_race_results = ns.clone('EventRaceResults', race, {
-        'results': fields.List(fields.Nested(result_with_person)),
-        })
+    event_race_results = ns.clone('EventRaceResults', race,
+                                  {'results': fields.List(fields.Nested(result_with_person)),
+                                   })
 
     # Container for grouping results by discipline for a person
-    person_discipline_results = ns.model('PersonDisciplineResults', {
-        'name': fields.String,
-        'display': fields.String,
-        'results': fields.List(fields.Nested(result_with_race), attribute=fill_results),
-        })
+    person_discipline_results = ns.model('PersonDisciplineResults',
+                                         {'name': fields.String,
+                                          'display': fields.String,
+                                          'results': fields.List(fields.Nested(result_with_race), attribute=fill_results),
+                                          })
 
     # Contains all results for a person, grouped by discipline
-    person_results = ns.clone('PersonResults', person, {
-        'disciplines': fields.List(fields.Nested(person_discipline_results)),
-        })
+    person_results = ns.clone('PersonResults', person,
+                              {'disciplines': fields.List(fields.Nested(person_discipline_results)),
+                               })
 
     # Contains all results for an event, grouped by race
-    event_results = ns.clone('EventResults', event, {
-        'races': fields.List(fields.Nested(event_race_results))
-        })
+    event_results = ns.clone('EventResults', event,
+                             {'races': fields.List(fields.Nested(event_race_results)),
+                              })
 
     @ns.route('/person/<int:id>')
     @ns.response(200, 'Success', person_results)
-    @ns.response(400, 'Bad Request')
+    @ns.response(404, 'Not Found')
     @ns.response(500, 'Server Error')
     class ResultsForPerson(Resource):
         @db.atomic()
-        @cache.cached(timeout=900)
+        @cache.cached(timeout=cache_timeout)
         def get(self, id):
             db_person = Person.get_by_id(id)
             db_person.disciplines = []
@@ -123,28 +125,24 @@ def register(api, cache):
                                .where(Result.person == db_person)
                                .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
                                .order_by(Race.date.desc(), Race.id.desc()))
-                db_person.disciplines.append({
-                    'name': upgrade_discipline,
-                    'display': upgrade_discipline.split('_')[0].title(),
-                    'results': prefetch(query, Points, Race, Event, Series)
-                    })
-            return marshal(db_person, person_results)
+                db_person.disciplines.append({'name': upgrade_discipline,
+                                              'display': upgrade_discipline.split('_')[0].title(),
+                                              'results': prefetch(query, Points, Race, Event, Series),
+                                              })
+            return (marshal(db_person, person_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
 
     @ns.route('/event/<int:id>')
     @ns.response(200, 'Success', event_results)
-    @ns.response(400, 'Bad Request')
+    @ns.response(404, 'Not Found')
     @ns.response(500, 'Server Error')
     class ResultsForEvent(Resource):
         @db.atomic()
-        @cache.cached(timeout=900)
+        @cache.cached(timeout=cache_timeout)
         def get(self, id):
-            query = (Event.select(Event, Series, Race, Result, Points, Person)
-                          .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
-                          .join(Race, src=Event)
-                          .join(Result, src=Race)
-                          .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
-                          .join(Person, src=Result)
-                          .where(Event.id == id)
-                          .order_by(Race.id.asc(), Result.id.asc()))
-            for event in prefetch(query, Series, Race, Result, Points, Person):
-                return marshal(event, event_results)
+            query = Event.select().where(Event.id == id).prefetch(Series)
+            for event in query:
+                event.races = (event.races
+                                    .order_by(Race.categories.asc(),
+                                              Race.name.asc())
+                                    .prefetch(Result, Points, Person))
+                return (marshal(event, event_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})

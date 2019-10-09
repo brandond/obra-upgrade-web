@@ -16,12 +16,11 @@ uwsgi:
   chdir: /app
   virtualenv: /app/venv
   route: ^/$ static:/app/static/index.html
-  route: ^/notifications$ static:/app/static/index.html
-  route: ^/upgrades/.*$ static:/app/static/index.html
-  route: ^/person/.*$ static:/app/static/index.html
-  route: ^/results/.*$ static:/app/static/index.html
-  route: ^/results$ static:/app/static/index.html
-  route: ^/search$ static:/app/static/index.html
+  route: ^/notifications static:/app/static/index.html
+  route: ^/upgrades static:/app/static/index.html
+  route: ^/person static:/app/static/index.html
+  route: ^/search static:/app/static/index.html
+  route: ^/event static:/app/static/index.html
   check-static: /app/static
   worker-mount: /=obra-upgrade-web:application
   static-gzip-all: True
