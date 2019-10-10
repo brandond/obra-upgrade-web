@@ -15,9 +15,18 @@ def register(api, cache):
     def fill_results(pdr):
         if not pdr['results']:
             return []
-        # Default filler point just pulls info from last race category
-        last_points = Points(sum_categories=pdr['results'][-1].race.categories)
-        # Backfill points from last to first
+
+        # Create initial filler point. The oldest result SHOULD have placeholder points,
+        # but if for some reason it does not we create our own based on the race info.
+        if pdr['results'][-1].points:
+            last_points = deepcopy(pdr['results'][-1].points[0])
+            last_points.result = None
+            last_points.notes = ''
+            last_points.value = 0
+        else:
+            last_points = Points(sum_categories=pdr['results'][-1].race.categories)
+
+        # Backfill points from oldest to newest
         for result in reversed(pdr['results']):
             if result.points:
                 last_points = deepcopy(result.points[0])
@@ -26,6 +35,7 @@ def register(api, cache):
                 last_points.value = 0
             else:
                 result.points.append(last_points)
+
         return pdr['results']
 
     # Base stuff and relationships
@@ -124,7 +134,7 @@ def register(api, cache):
                                .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                                .where(Result.person == db_person)
                                .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
-                               .order_by(Race.date.desc(), Race.id.desc()))
+                               .order_by(Race.date.desc(), Race.created.desc()))
                 db_person.disciplines.append({'name': upgrade_discipline,
                                               'display': upgrade_discipline.split('_')[0].title(),
                                               'results': prefetch(query, Points, Race, Event, Series),

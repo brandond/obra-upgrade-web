@@ -1,10 +1,10 @@
 <script type="text/html" id="index">
   <div class="card py-1 mb-2">
-    <p>Cool stuff to improve your rest day experience. Result notifications, upgrade points, race rankings, etc.</p>
+    <p>Extra stuff to improve your post-race experience. Result notifications, upgrade points, race rankings, etc.</p>
   </div>
 
   <div class="card bg-light py-1 mb-2" id="recent">
-    <h5 class="card-title">Recent Events</h5>
+    <h5 class="card-title"><a href="/events">Recent Events</a></h5>
     <nav class="nav flex-column bg-secondary nav-pills" data-bind="foreach: { data: eventsRecent, as: 'event' }">
       <a class="nav-link text-light py-0"
          data-bind="text: event.name,
@@ -13,15 +13,15 @@
     </nav>
   </div>
   <div class="card bg-light py-1 mb-2" id="sandbaggers" data-bind="visible: upgradesRecent().length">
-    <h5 class="card-title">Top Upgrades</h5>
+    <h5 class="card-title"><a href="/upgrades">Top Upgrades</a></h5>
     <table class="table table-sm mx-auto text-left bg-secondary mb-0">
       <tbody data-bind="foreach: { data: upgradesRecent, as: 'points' }">
-        <tr class="position-relative">
+        <tr>
           <td>
-            <a class="text-light stretched-link" data-bind="text: points.person.name, attr: { href: '/person/' + points.person.id }">Name</a>
+            <a class="text-light" data-bind="text: points.person.name, attr: { href: '/person/' + points.person.id }">Name</a>
           </td>
           <td class="text-light" data-bind="text: points.sum_value + ' Points'">Points</td>
-          <td class="text-light" data-bind="text: Math.min(...points.sum_categories) + ' &#x21FE; ' + (Math.min(...points.sum_categories) - 1)">Category</td>
+          <td class="text-light" data-bind="text: Math.min(...points.sum_categories) + ' -> ' + (Math.min(...points.sum_categories) - 1)">Category</td>
         </tr>
       </tbody>
     </table>
@@ -67,13 +67,13 @@
         <table class="table table-sm bg-white text-left mb-2">
           <thead>
             <tr>
-              <th class="col-1">#</th>
-              <th class="col-1">Points</th>
-              <th class="col-7 col-sm-3 col-lg-2">Name</th>
-              <th class="col-0 col-sm-4 col-lg-3 d-none d-sm-table-cell">Team</th>
-              <th class="col-1" data-bind="hidden: race.results[0].laps === undefined">Laps</th>
-              <th class="col-1" data-bind="hidden: race.results[0].time === undefined">Time</th>
-              <th class="col-0 col-sm-0 col-lg-3 d-none d-lg-table-cell">Notes</th>
+              <th class="">#</th>
+              <th class="">Points</th>
+              <th class="">Name</th>
+              <th class="d-none d-sm-table-cell">Team</th>
+              <th class="" data-bind="hidden: race.results[0].laps === undefined">Laps</th>
+              <th class="" data-bind="hidden: race.results[0].time === undefined">Time</th>
+              <th class="d-none d-lg-table-cell">Notes</th>
             </tr>
           </thead>
           <tbody data-bind="foreach: { data: race.results, as: 'result' }">
@@ -177,14 +177,14 @@
         <table class="table table-sm text-left">
           <thead>
             <tr>
-              <th class="col-2 col-sm-1 ">#</th>
-              <th class="col-2 col-sm-1 ">Points</th>
-              <th class="col-0 col-sm-1          d-none d-sm-table-cell">Total Pts</th>
-              <th class="col-6 col-sm-4 col-md-2 ">Event</th>
-              <th class="col-4 col-sm-4 col-md-2 ">Race</th>
-              <th class="col-0 col-sm-0 col-md-1 d-none d-md-table-cell">Category</th>
-              <th class="col-0 col-sm-1          d-none d-sm-table-cell">Date</th>
-              <th class="col-0 col-sm-0 col-md-3 d-none d-md-table-cell">Notes</th>
+              <th class="">#</th>
+              <th class="">Points</th>
+              <th class="d-none d-sm-table-cell">Total Pts</th>
+              <th class="">Event</th>
+              <th class="">Race</th>
+              <th class="d-none d-md-table-cell">Category</th>
+              <th class="d-none d-sm-table-cell">Date</th>
+              <th class="d-none d-md-table-cell">Notes</th>
             </tr>
           </thead>
           <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
@@ -193,9 +193,9 @@
               <td data-bind="text: result.value">Points</td>
               <td data-bind="text: result.sum_value" class="d-none d-sm-table-cell">Total Pts</td>
               <td><a data-bind="text: result.race.event.name, attr: { href: '/event/'+ result.race.event.id + '#' + result.race.id }">Event</a></td>
-              <td data-bind="text: result.race.name">Race</td>
+              <td data-bind="text: result.race.name" class="text-nowrap">Race</td>
               <td data-bind="text: result.sum_categories.join('/')" class="d-none d-md-table-cell">Category</td>
-              <td data-bind="text: result.race.date" class="d-none d-sm-table-cell">Date</td>
+              <td data-bind="text: result.race.date" class="d-none d-sm-table-cell text-nowrap">Date</td>
               <td data-bind="text: result.notes" class="d-none d-md-table-cell">Notes</td>
             </tr>
           </tbody>
@@ -236,7 +236,7 @@
           </thead>
           <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
             <tr>
-              <td data-bind="text: Math.min(...result.sum_categories) + ' &#x21FE; ' + (Math.min(...result.sum_categories) - 1)">Category</td>
+              <td data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)">Category</td>
               <td><a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
               <td data-bind="text: result.sum_value">Total Pts</td>
               <td data-bind="text: result.last_date">Last Date</td>
