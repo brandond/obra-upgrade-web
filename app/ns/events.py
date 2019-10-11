@@ -46,6 +46,9 @@ def register(api, cache):
     @ns.response(200, 'Success', [event_with_discipline])
     @ns.response(500, 'Server Error')
     class RecentEvents(Resource):
+        """
+        Get recent events from any year and discipline, sorted by date
+        """
         @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
@@ -61,6 +64,9 @@ def register(api, cache):
     @ns.response(200, 'Success', [fields.Integer])
     @ns.response(500, 'Server Error')
     class YearList(Resource):
+        """
+        Get a list of years that we have data for
+        """
         @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
@@ -69,11 +75,14 @@ def register(api, cache):
                           .namedtuples())
             return ([r.year for r in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
 
-    @ns.route('/years/<int:year>')
+    @ns.route('/years/<int:year>/')
     @ns.response(200, 'Success', [discipline_with_events])
     @ns.response(404, 'Not Found')
     @ns.response(500, 'Server Error')
     class YearEvents(Resource):
+        """
+        Get a list of events for this year, grouped by discipline
+        """
         @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, year):

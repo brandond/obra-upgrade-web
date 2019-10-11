@@ -7,7 +7,7 @@ cache_timeout = 86400
 
 
 def register(api, cache):
-    ns = api.namespace('discipline', 'Race Disciplines')
+    ns = api.namespace('disciplines', 'Race Disciplines')
     discipline = ns.model('RaceDiscipline',
                           {'name': fields.String,
                            'display': fields.String,

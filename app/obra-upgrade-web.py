@@ -13,7 +13,7 @@ def create_application():
     cache = Cache(app=app, with_jinja2_ext=False, config={'CACHE_TYPE': os.environ.get('CACHE_TYPE', 'uwsgi'),
                                                           'CACHE_UWSGI_NAME': 'default'})
 
-    for name in ['discipline', 'notification', 'result', 'search', 'event', 'upgrade']:
+    for name in ['disciplines', 'events', 'notifications', 'people', 'results', 'upgrades']:
         import_module('ns.' + name).register(api, cache)
 
     app.register_blueprint(app_api_v1, url_prefix='/api/v1')

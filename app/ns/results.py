@@ -79,7 +79,7 @@ def register(api, cache):
                        'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade if r.points else None),
                        })
 
-    # Race with extra info for personal results
+    # Race with event info
     race_with_event = ns.clone('RaceWithEvent', race,
                                {'event': fields.Nested(event),
                                 })
@@ -99,8 +99,8 @@ def register(api, cache):
                                   {'results': fields.List(fields.Nested(result_with_person)),
                                    })
 
-    # Container for grouping results by discipline for a person
-    person_discipline_results = ns.model('PersonDisciplineResults',
+    # Container for grouping results by discipline
+    discipline_results = ns.model('DisciplineResultsWithRace',
                                          {'name': fields.String,
                                           'display': fields.String,
                                           'results': fields.List(fields.Nested(result_with_race), attribute=fill_results),
@@ -108,7 +108,7 @@ def register(api, cache):
 
     # Contains all results for a person, grouped by discipline
     person_results = ns.clone('PersonResults', person,
-                              {'disciplines': fields.List(fields.Nested(person_discipline_results)),
+                              {'disciplines': fields.List(fields.Nested(discipline_results)),
                                })
 
     # Contains all results for an event, grouped by race
@@ -121,38 +121,49 @@ def register(api, cache):
     @ns.response(404, 'Not Found')
     @ns.response(500, 'Server Error')
     class ResultsForPerson(Resource):
+        """
+        Return results for a person.
+        """
         @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, id):
-            db_person = Person.get_by_id(id)
-            db_person.disciplines = []
-            for upgrade_discipline in sorted(DISCIPLINE_MAP.keys()):
-                query = (Result.select(Result, Points, Race, Event, Series)
-                               .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
-                               .join(Race, src=Result)
-                               .join(Event, src=Race)
-                               .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
-                               .where(Result.person == db_person)
-                               .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
-                               .order_by(Race.date.desc(), Race.created.desc()))
-                db_person.disciplines.append({'name': upgrade_discipline,
-                                              'display': upgrade_discipline.split('_')[0].title(),
-                                              'results': prefetch(query, Points, Race, Event, Series),
-                                              })
-            return (marshal(db_person, person_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            try:
+                db_person = Person.get_by_id(id)
+                db_person.disciplines = []
+                for upgrade_discipline in sorted(DISCIPLINE_MAP.keys()):
+                    query = (Result.select(Result, Points, Race, Event, Series)
+                                   .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
+                                   .join(Race, src=Result)
+                                   .join(Event, src=Race)
+                                   .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
+                                   .where(Result.person == db_person)
+                                   .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
+                                   .order_by(Race.date.desc(), Race.created.desc()))
+                    db_person.disciplines.append({'name': upgrade_discipline,
+                                                  'display': upgrade_discipline.split('_')[0].title(),
+                                                  'results': prefetch(query, Points, Race, Event, Series),
+                                                  })
+                return (marshal(db_person, person_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            except Person.DoesNotExist:
+                return ({}, 404, {'Cache-Control': f'public, max-age={cache_timeout}'})
 
     @ns.route('/event/<int:id>')
     @ns.response(200, 'Success', event_results)
     @ns.response(404, 'Not Found')
     @ns.response(500, 'Server Error')
     class ResultsForEvent(Resource):
+        """
+        Return results for an event.
+        """
         @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, id):
-            query = Event.select().where(Event.id == id).prefetch(Series)
-            for event in query:
+            try:
+                event = Event.get_by_id(id)
                 event.races = (event.races
                                     .order_by(Race.categories.asc(),
                                               Race.name.asc())
                                     .prefetch(Result, Points, Person))
                 return (marshal(event, event_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            except Event.DoesNotExist:
+                return ({}, 404, {'Cache-Control': f'public, max-age={cache_timeout}'})

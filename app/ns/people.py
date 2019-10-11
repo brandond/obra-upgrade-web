@@ -8,7 +8,7 @@ cache_timeout = 900
 
 
 def register(api, cache):
-    ns = api.namespace('people', 'People Search')
+    ns = api.namespace('people', 'People Search and Metadata')
 
     result = ns.model('SearchResult',
                       {'id': fields.Integer,
@@ -22,7 +22,10 @@ def register(api, cache):
     @ns.response(200, 'Success', [result])
     @ns.response(400, 'Bad Request')
     @ns.response(500, 'Server Error')
-    class People(Resource):
+    class PeopleSearch(Resource):
+        """
+        Get a list of people whose name matches a search string
+        """
         @ns.param(name='name', description='Name Search String', type='string', minLength=3, required=True)
         @cache.cached(timeout=cache_timeout, query_string=True)
         def get(self):

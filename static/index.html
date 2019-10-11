@@ -46,14 +46,14 @@
             <a class="nav-link" href="/events">Event Results</a>
           </li>
           <li class="nav-item" data-bind="css: {active: pageTemplate() == 'upgrades' }">
-            <a class="nav-link" href="/upgrades">Upgrades</a>
+            <a class="nav-link" href="/upgrades/pending">Upgrades</a>
           </li>
           <li class="nav-item" data-bind="css: {active: pageTemplate() == 'notifications' }">
             <a class="nav-link" href="/notifications">Notifications</a>
           </li>
         </ul>
         <form class="form-inline my-2 my-lg-0" action="/search" method="get" data-bind="submit: searchSubmit">
-          <input class="form-control mr-sm-2" type="text" placeholder="Name" aria-label="Search" name="name">
+          <input class="form-control mr-sm-2" type="text" autocomplete="off" minlength=3 placeholder="Name" aria-label="Search" name="name">
           <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
         </form>
       </div>
