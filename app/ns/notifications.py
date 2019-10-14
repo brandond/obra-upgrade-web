@@ -1,5 +1,6 @@
-from flask_restplus import Resource, fields, marshal
 import logging
+
+from flask_restplus import Resource, fields, marshal
 
 logger = logging.getLogger(__name__)
 

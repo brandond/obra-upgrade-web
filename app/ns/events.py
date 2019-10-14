@@ -1,9 +1,12 @@
-from flask_restplus import Resource, fields, marshal
-from peewee import fn, JOIN
-from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import Series, Event, Race, db
-
 import logging
+from email.utils import formatdate
+from time import time
+
+from obra_upgrade_calculator.data import DISCIPLINE_MAP
+from obra_upgrade_calculator.models import Event, Race, Series, db
+from peewee import JOIN, fn
+
+from flask_restplus import Resource, fields, marshal
 
 logger = logging.getLogger(__name__)
 cache_timeout = 900
@@ -58,7 +61,7 @@ def register(api, cache):
                           .order_by(Race.date.desc())
                           .group_by(Event)
                           .limit(6))
-            return ([marshal(e, event_with_discipline) for e in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(e, event_with_discipline) for e in query], 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/years/')
     @ns.response(200, 'Success', [fields.Integer])
@@ -73,7 +76,7 @@ def register(api, cache):
             query = (Event.select(fn.DISTINCT(Event.year))
                           .order_by(Event.year.desc())
                           .namedtuples())
-            return ([r.year for r in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([r.year for r in query], 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/years/<int:year>/')
     @ns.response(200, 'Success', [discipline_with_events])
@@ -100,4 +103,4 @@ def register(api, cache):
                         'events': query,
                         }
                 disciplines.append(data)
-            return ([marshal(d, discipline_with_events) for d in disciplines], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(d, discipline_with_events) for d in disciplines], 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})

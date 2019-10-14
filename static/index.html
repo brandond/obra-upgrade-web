@@ -36,12 +36,7 @@
       </button>
 
       <div class="collapse navbar-collapse" id="nav-main">
-        <ul class="navbar-nav mr-auto">
-          <!-- Brand button already takes us home, do we need this?
-          <li class="nav-item" data-bind="css: {active: pageTemplate() == 'index' }">
-            <a class="nav-link" href="/">Home</a>
-          </li>
-          -->
+        <ul class="navbar-nav mr-auto" data-bind="if: pageTemplate">
           <li class="nav-item" data-bind="css: {active: pageTemplate().startsWith('event') }">
             <a class="nav-link" href="/events">Event Results</a>
           </li>
@@ -59,7 +54,7 @@
       </div>
     </nav>
 
-    <main role="main">
+    <main role="main" data-bind="if: pageTemplate">
       <div class="site-content p-0 container"
            data-bind="template: { name: pageTemplate }, childrenComplete: scrollToHash"></div>
     </main>

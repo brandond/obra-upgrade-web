@@ -2,7 +2,7 @@
 
 var pageViewModel = {
   // Page display state vars
-  pageTemplate: ko.observable('index'),
+  pageTemplate: ko.observable(),
   pageContext: ko.observable(),
   activePanel: ko.observable(),
   // Specific data loaded from API to build template content
@@ -156,7 +156,6 @@ window.addEventListener('load', function() {
   page('/notifications', switchPage);
   page('/person/:id', doPerson, switchPage);
   page('/upgrades/:type', doUpgrades, switchPage);
-  page();
 
   $.get('/html/templates.html', function(templates){
     $('body').append(templates);

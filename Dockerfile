@@ -26,9 +26,9 @@ RUN apk --no-cache upgrade
 LABEL maintainer="Brad Davidson <brad@oatmail.org>"
 RUN apk --no-cache add bash libstdc++ openssl uwsgi-http uwsgi-python3 uwsgi-router_static
 COPY --chown=guest:users --from=builder /app/venv/ /app/venv/
-RUN test ! -e /tmp && \
-    mkdir /tmp && \
-    chmod 1777 /tmp || \
+RUN test ! -e /tmp/spool && \
+    mkdir -p /tmp/spool && \
+    chmod -R 1777 /tmp || \
     true
 
 COPY docker-entrypoint.sh /

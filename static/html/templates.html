@@ -92,11 +92,11 @@
 
 <script type="text/html" id="event">
   <div data-bind="with: eventResults, as: 'event'">
-    <h2 data-bind="text: event.name">Event Name</h2>
+    <h2><a data-bind="text: event.name, attr: { href: 'https://obra.org/events/' + event.id, title: 'View on OBRA.org' }">Event Name</a></h2>
 
     <ul class="nav nav-pills nav-light" data-bind="foreach: { data: event.races, as: 'race' }">
       <li class="nav-item">
-        <a class="nav-link px-2 py-0 mx-auto" data-bind="text: race.name, attr: { href: '/event/' + event.id + '#race-' + race.id }">
+        <a class="nav-link px-2 py-0 mx-auto" data-bind="text: race.name, attr: { href: '/event/' + event.id + '#race_' + race.id }">
           Race Name
         </a>
       </li>
@@ -104,7 +104,7 @@
 
     <div data-bind="foreach: { data: event.races, as: 'race' }">
       <div class="card bg-light mb-2">
-        <h5 class="card-title mb-1" data-bind="text: race.name, attr: { id: 'race-' + race.id }">Race Name</h5>
+        <h5 class="card-title mb-1"><a data-bind="text: race.name, attr: { id: 'race_' + race.id, href: 'https://obra.org/events/' + event.id + '#race_' + race.id, title: 'View on OBRA.org' }">Race Name</a></h5>
         <div class="container bg-white mb-2">
           <table class="table table-sm text-left mb-0">
             <thead>
@@ -209,7 +209,7 @@
 
 <script type="text/html" id="person">
   <div data-bind="with: personResults, as: 'person'">
-    <h2 data-bind="text: 'Results for ' + person.name">Results For Name</h2>
+    <h2><a data-bind="text: 'Results for ' + person.name, attr: { href: 'https://obra.org/people/' + person.id, title: 'View on OBRA.org'}">Results for Name</a></h2>
 
     <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
         data-bind="foreach: { data: person.disciplines, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, person.disciplines)">
@@ -250,7 +250,7 @@
                 <td data-bind="text: result.sum_value || ''"
                     class="      col-sm-1 col-md-1 col-lg-1 d-sm-table-cell d-none">Total Pts</td>
                 <td class="col-4 col-sm-4 col-md-3 col-lg-2">
-                <a data-bind="text: result.race.event.name, attr: { href: '/event/'+ result.race.event.id + '#race-' + result.race.id }"
+                <a data-bind="text: result.race.event.name, attr: { href: '/event/'+ result.race.event.id + '#race_' + result.race.id }"
                     >Event</a></td>
                 <td data-bind="text: result.race.name"
                     class="col-4 col-sm-3 col-md-3 col-lg-3">Race</td>
@@ -280,7 +280,9 @@
     </li>
   </ul>
 
-  <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
+  <div data-bind="if: $root.pageContext().params.type">
+    <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
+  </div>
 </script>
 
 <script type="text/html" id="upgrades_pending">

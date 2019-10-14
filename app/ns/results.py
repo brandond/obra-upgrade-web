@@ -1,9 +1,14 @@
-from flask_restplus import Resource, fields, marshal
-from peewee import prefetch, JOIN
-from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import Series, Event, Person, Race, Result, Points, db
-from copy import deepcopy
 import logging
+from copy import deepcopy
+from email.utils import formatdate
+from time import time
+
+from obra_upgrade_calculator.data import DISCIPLINE_MAP
+from obra_upgrade_calculator.models import (Event, Person, Points, Race,
+                                            Result, Series, db)
+from peewee import JOIN, prefetch
+
+from flask_restplus import Resource, fields, marshal
 
 logger = logging.getLogger(__name__)
 cache_timeout = 900
@@ -143,9 +148,9 @@ def register(api, cache):
                                                   'display': upgrade_discipline.split('_')[0].title(),
                                                   'results': prefetch(query, Points, Race, Event, Series),
                                                   })
-                return (marshal(db_person, person_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+                return (marshal(db_person, person_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
             except Person.DoesNotExist:
-                return ({}, 404, {'Cache-Control': f'public, max-age={cache_timeout}'})
+                return ({}, 404, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/event/<int:id>')
     @ns.response(200, 'Success', event_results)
@@ -161,9 +166,8 @@ def register(api, cache):
             try:
                 event = Event.get_by_id(id)
                 event.races = (event.races
-                                    .order_by(Race.categories.asc(),
-                                              Race.name.asc())
+                                    .order_by(Race.name.asc())
                                     .prefetch(Result, Points, Person))
-                return (marshal(event, event_results), 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+                return (marshal(event, event_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
             except Event.DoesNotExist:
-                return ({}, 404, {'Cache-Control': f'public, max-age={cache_timeout}'})
+                return ({}, 404, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})

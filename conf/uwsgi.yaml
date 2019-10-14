@@ -8,10 +8,14 @@ uwsgi:
   log-5xx: True
   log-sendfile: True
   log-ioerror: True
-  cache2: name=default,items=4096,bitmap=1,purge_lru=1
+  log-x-forwarded-for: True
+  cache2: name=default,items=4096,bitmap=1
+  cache2: name=paths,items=32
   need-plugins: http,router_static,python3
+  single-interpreter: True
   enable-threads: True
   processes: %k
+  http-processes: %k
   thunder-lock: True
   chdir: /app
   virtualenv: /app/venv
@@ -22,7 +26,14 @@ uwsgi:
   route: ^/search static:/app/static/index.html
   route: ^/event static:/app/static/index.html
   check-static: /app/static
+  static-cache-paths: 900
+  static-cache-paths-name: paths
+  import: logconfig.py
+  import: tasks.py
   worker-mount: /=obra-upgrade-web:application
+  spooler: /tmp/spool
+  spooler-quiet: True
+  spooler-processes: 1
   static-gzip-all: True
   http-keepalive: True
   http-auto-gzip: True
@@ -32,3 +43,4 @@ uwsgi:
   http: 0.0.0.0:8080
   stats: 0.0.0.0:8081
   stats-http: True
+

@@ -1,9 +1,9 @@
+import os
+from importlib import import_module
+
 from flask import Blueprint, Flask
 from flask_caching import Cache
 from flask_restplus import Api
-from importlib import import_module
-import logging
-import os
 
 
 def create_application():
@@ -20,5 +20,4 @@ def create_application():
     return app
 
 
-logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
 application = create_application()

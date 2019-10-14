@@ -1,7 +1,11 @@
+import logging
+from email.utils import formatdate
+from time import time
+
+from obra_upgrade_calculator.models import Person
+
 from flask import request
 from flask_restplus import Resource, fields, marshal
-from obra_upgrade_calculator.models import Person
-import logging
 
 logger = logging.getLogger(__name__)
 cache_timeout = 900
@@ -42,4 +46,4 @@ def register(api, cache):
                            .concat(' ')
                            .concat(Person.last_name)
                            .contains(name)))
-            return ([marshal(r, result) for r in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(r, result) for r in query], 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})

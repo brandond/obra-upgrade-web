@@ -1,9 +1,14 @@
-from flask_restplus import Resource, fields, marshal
-from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import Points, Result, Person, Race, Event, Series, db
-from peewee import fn, JOIN
-from datetime import date
 import logging
+from datetime import date
+from email.utils import formatdate
+from time import time
+
+from obra_upgrade_calculator.data import DISCIPLINE_MAP
+from obra_upgrade_calculator.models import (Event, Person, Points, Race,
+                                            Result, Series, db)
+from peewee import JOIN, Window, fn
+
+from flask_restplus import Resource, fields, marshal
 
 logger = logging.getLogger(__name__)
 cache_timeout = 900
@@ -104,17 +109,20 @@ def register(api, cache):
             disciplines = []
 
             for upgrade_discipline in sorted(DISCIPLINE_MAP.keys()):
-                # Subquery to find the most recent Point for each person in each discipline
-                # where their most recent point is flagged needs_upgrade
-                last_points = (Points.select(fn.MAX(Points.result_id))
-                                     .join(Result, src=Points)
+                # Subquery to find the most recent result for each person
+                last_result = (Result.select()
                                      .join(Race, src=Result)
                                      .join(Event, src=Race)
                                      .join(Person, src=Result)
                                      .where(Race.date >= start_date)
+                                     .where(Race.categories.length() > 0)
                                      .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
-                                     .group_by(Person.id, Event.discipline)
-                                     .having(Points.needs_upgrade == True))
+                                     .select(fn.DISTINCT(fn.FIRST_VALUE(Result.id)
+                                                           .over(partition_by=[Result.person_id],
+                                                                 order_by=[Race.date.desc(), Race.created.desc()],
+                                                                 start=Window.preceding()
+                                                                 )
+                                                         ).alias('first_id')))
 
                 query = (Result.select(Result,
                                        Race,
@@ -125,9 +133,9 @@ def register(api, cache):
                                .join(Event, src=Race)
                                .join(Person, src=Result)
                                .join(Points, src=Result)
-                               .where(Result.id << last_points)
+                               .where(Result.id << last_result)
+                               .where(Points.needs_upgrade == True)
                                .where(~(Race.name.contains('Junior')))
-                               .group_by(Person)
                                .order_by(Points.sum_categories.asc(),
                                          Points.sum_value.desc()))
 
@@ -136,7 +144,9 @@ def register(api, cache):
                                     'results': query,
                                     })
 
-            return ([marshal(d, discipline_results) for d in disciplines], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(d, discipline_results) for d in disciplines],
+                    200,
+                    {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/pending/top/')
     @ns.response(200, 'Success', [result_with_person_and_race_with_event])
@@ -151,34 +161,41 @@ def register(api, cache):
             cur_year = date.today().year
             start_date = date(cur_year - 1, 1, 1)
 
-            # Subquery to find the most recent Point for each person in each discipline
-            # where their most recent point is flagged needs_upgrade
-            last_points = (Points.select(fn.MAX(Points.result_id))
-                                 .join(Result, src=Points)
+            # Subquery to find the most recent result for each person
+            last_result = (Result.select()
                                  .join(Race, src=Result)
                                  .join(Event, src=Race)
                                  .join(Person, src=Result)
                                  .where(Race.date >= start_date)
-                                 .group_by(Person.id, Event.discipline)
-                                 .having(Points.needs_upgrade == True))
+                                 .where(Race.categories.length() > 0)
+                                 .select(fn.DISTINCT(fn.FIRST_VALUE(Result.id)
+                                                       .over(partition_by=[Result.person_id],
+                                                             order_by=[Race.date.desc(), Race.created.desc()],
+                                                             start=Window.preceding()
+                                                             )
+                                                     ).alias('first_id')))
 
             query = (Result.select(Result,
                                    Race,
                                    Event,
+                                   Series,
                                    Person,
                                    Points)
                            .join(Race, src=Result)
                            .join(Event, src=Race)
+                           .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                            .join(Person, src=Result)
                            .join(Points, src=Result)
-                           .where(Result.id << last_points)
+                           .where(Result.id << last_result)
                            .where(~(Race.name.contains('Junior')))
-                           .group_by(Person)
+                           .where(Points.needs_upgrade == True)
                            .order_by(Points.sum_categories.asc(),
                                      Points.sum_value.desc())
                            .limit(6))
 
-            return ([marshal(r, result_with_person_and_race_with_event) for r in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(r, result_with_person_and_race_with_event) for r in query],
+                    200,
+                    {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/recent/')
     @ns.response(200, 'Success', [discipline_results])
@@ -220,7 +237,9 @@ def register(api, cache):
                                     'results': query,
                                     })
 
-            return ([marshal(d, discipline_results) for d in disciplines], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(d, discipline_results) for d in disciplines],
+                    200,
+                    {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
     @ns.route('/recent/top/')
     @ns.response(200, 'Success', [result_with_person_and_race_with_event])
@@ -255,4 +274,6 @@ def register(api, cache):
                                      Person.first_name.asc())
                            .limit(6))
 
-            return ([marshal(r, result_with_person_and_race_with_event) for r in query], 200, {'Cache-Control': f'public, max-age={cache_timeout}'})
+            return ([marshal(r, result_with_person_and_race_with_event) for r in query],
+                    200,
+                    {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
