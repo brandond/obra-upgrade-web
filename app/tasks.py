@@ -38,7 +38,7 @@ def scrape_events(num):
         if scrapers.scrape_new(discipline):
             if upgrades.recalculate_points(discipline, incremental=True):
                 upgrades.sum_points(discipline)
-                confirm_pending_upgrades(discipline)
+                upgrades.confirm_pending_upgrades(discipline)
                 changed = True
 
     if changed:
@@ -56,7 +56,7 @@ def scrape_recent(num):
         if scrapers.scrape_recent(discipline, 3):
             if upgrades.recalculate_points(discipline, incremental=True):
                 upgrades.sum_points(discipline)
-                confirm_pending_upgrades(discipline)
+                upgrades.confirm_pending_upgrades(discipline)
                 changed = True
 
     if changed:
