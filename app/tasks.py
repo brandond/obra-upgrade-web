@@ -32,6 +32,8 @@ def scrape_events(num):
     for discipline in data.DISCIPLINE_MAP.keys():
         for year in years:
             scrapers.scrape_year(year, discipline)
+            scrapers.scrape_parents(year, discipline)
+            scrapers.clean_events(year, discipline)
 
         if scrapers.scrape_new(discipline):
             if upgrades.recalculate_points(discipline, incremental=True):

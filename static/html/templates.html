@@ -49,7 +49,7 @@
               <td class="col-4 col-sm-3">
                 <a class="text-light stretched-link" data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a>
               </td>
-              <td class="col-6 col-sm-5 text-light" data-bind="text: result.notes">Notes</td>
+              <td class="col-6 col-sm-5 text-light" data-bind="text: result.notes.split(';')[0]">Notes</td>
               <td class="col-2 col-sm-2 text-light text-nowrap" data-bind="text: result.race.date">Date</td>
               <td class="      col-sm-2 d-none d-sm-table-cell text-light" data-bind="text: result.race.event.discipline.display">Discipline</td>
             </tr>
@@ -94,13 +94,15 @@
   <div data-bind="with: eventResults, as: 'event'">
     <h2><a data-bind="text: event.name, attr: { href: 'https://obra.org/events/' + event.id, title: 'View on OBRA.org' }">Event Name</a></h2>
 
-    <ul class="nav nav-pills nav-light" data-bind="foreach: { data: event.races, as: 'race' }">
-      <li class="nav-item">
-        <a class="nav-link px-2 py-0 mx-auto" data-bind="text: race.name, attr: { href: '/event/' + event.id + '#race_' + race.id }">
-          Race Name
-        </a>
-      </li>
-    </ul>
+    <div class="col-sm-12 col-md-10 col-lg-8 mx-auto">
+      <ul class="nav nav-pills nav-light" data-bind="foreach: { data: event.races, as: 'race' }">
+        <li class="nav-item">
+          <a class="nav-link px-2 py-0 mx-auto" data-bind="text: race.name, attr: { href: '/event/' + event.id + '#race_' + race.id }">
+            Race Name
+          </a>
+        </li>
+      </ul>
+    </div>
 
     <div data-bind="foreach: { data: event.races, as: 'race' }">
       <div class="card bg-light mb-2">
@@ -113,8 +115,8 @@
                 <th class="col-2 col-sm-1 col-md-1 col-lg-1 text-nowrap">Points</th>
                 <th class="col-5 col-sm-3 col-md-3 col-lg-2">Name</th>
                 <th class="      col-sm-4 col-md-5 col-lg-4 d-none d-sm-table-cell">Team</th>
-                <th class="col-2 col-sm-1 col-md-1 col-lg-1" data-bind="hidden: race.results[0].laps === undefined">Laps</th>
-                <th class="col-2 col-sm-2 col-md-1 col-lg-1" data-bind="hidden: race.results[0].time === undefined">Time</th>
+                <th class="col-2 col-sm-1 col-md-1 col-lg-1">Laps</th>
+                <th class="col-2 col-sm-2 col-md-1 col-lg-1">Time</th>
                 <th class="                        col-lg-2 d-none d-lg-table-cell">Notes</th>
               </tr>
             </thead>
@@ -128,9 +130,9 @@
                  <a data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a></td>
                 <td data-bind="text: result.person.team_name"
                     class="      col-sm-4 col-md-5 col-lg-4 d-none d-sm-table-cell">Team</td>
-                <td data-bind="text: result.laps, hidden: result.time === undefined"
+                <td data-bind="text: result.laps"
                     class="col-2 col-sm-1 col-md-1 col-lg-1">Laps</td>
-                <td data-bind="text: moment.duration(result.time * 1000).format('h:mm:ss'), hidden: result.time === undefined"
+                <td data-bind="text: result.time > 0 && moment.duration(result.time * 1000).format('h:mm:ss') || '-'"
                     class="col-2 col-sm-2 col-md-1 col-lg-1 text-nowrap">Time</td>
                 <td data-bind="text: result.notes"
                     class="                        col-lg-2 d-none d-lg-table-cell">Notes</td>
@@ -232,8 +234,8 @@
             <thead>
               <tr class="row">
                 <th class="col-2 col-sm-1 col-md-1 col-lg-1 border-top-0">#</th>
-                <th class="col-2 col-sm-1 col-md-1 col-lg-1 border-top-0 text-nowrap">Points</th>
-                <th class="      col-sm-1 col-md-1 col-lg-1 border-top-0 d-sm-table-cell d-none">Total Pts</th>
+                <th class="      col-sm-1 col-md-1 col-lg-1 border-top-0 d-sm-table-cell d-none text-nowrap">Points</th>
+                <th class="col-2 col-sm-1 col-md-1 col-lg-1 border-top-0">Total Pts</th>
                 <th class="col-4 col-sm-4 col-md-3 col-lg-2 border-top-0">Event</th>
                 <th class="col-4 col-sm-3 col-md-3 col-lg-3 border-top-0 ">Race</th>
                 <th class="               col-md-1 col-lg-1 border-top-0 d-md-table-cell d-none text-nowrap">Category</th>
@@ -246,9 +248,9 @@
                 <td data-bind="text: result.place + '/' + result.race.starters"
                     class="col-2 col-sm-1 col-md-1 col-lg-1 text-nowrap">#</td>
                 <td data-bind="text: result.value || ''"
-                    class="col-2 col-sm-1 col-md-1 col-lg-1">Points</td>
+                    class="      col-sm-1 col-md-1 col-lg-1 d-sm-table-cell d-none">Points</td>
                 <td data-bind="text: result.sum_value || ''"
-                    class="      col-sm-1 col-md-1 col-lg-1 d-sm-table-cell d-none">Total Pts</td>
+                    class="col-2 col-sm-1 col-md-1 col-lg-1">Total Pts</td>
                 <td class="col-4 col-sm-4 col-md-3 col-lg-2">
                 <a data-bind="text: result.race.event.name, attr: { href: '/event/'+ result.race.event.id + '#race_' + result.race.id }"
                     >Event</a></td>
@@ -280,13 +282,13 @@
     </li>
   </ul>
 
-  <div data-bind="if: $root.pageContext().params.type">
+  <div class="container bg-white mb-2 col-md-10 mx-auto" data-bind="if: $root.pageContext().params.type">
     <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
   </div>
 </script>
 
 <script type="text/html" id="upgrades_pending">
-  <div class="col-md-10 mx-auto" data-bind="with: upgradesPendingResults, as: 'upgrades'">
+  <div data-bind="with: upgradesPendingResults, as: 'upgrades'">
     <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
         data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
       <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
@@ -307,10 +309,10 @@
           <table class="table table-sm text-left">
             <thead>
               <tr class="row">
-                <th class="col-4">Name</th>
-                <th class="col-3">Total Pts</th>
-                <th class="col-2 text-nowrap">Category</th>
-                <th class="col-3">Date</th>
+                <th class="col-4 border-top-0">Name</th>
+                <th class="col-3 border-top-0">Total Pts</th>
+                <th class="col-2 border-top-0 text-nowrap">Category</th>
+                <th class="col-3 border-top-0">Date Confirmed</th>
               </tr>
             </thead>
             <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">
@@ -321,8 +323,8 @@
                     class="col-3">Total Pts</td>
                 <td data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)"
                     class="col-2">Category</td>
-                <td data-bind="text: result.race.date"
-                    class="col-3">Last Date</td>
+                <td data-bind="text: result.pending_date"
+                    class="col-3">Date Confirmed</td>
               </tr>
             </tbody>
           </table>
@@ -334,7 +336,7 @@
 </script>
 
 <script type="text/html" id="upgrades_recent">
-  <div class="col-md-10 mx-auto" data-bind="with: upgradesRecentResults, as: 'upgrades'">
+  <div data-bind="with: upgradesRecentResults, as: 'upgrades'">
     <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
         data-bind="foreach: { data: upgrades, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, upgrades)">
       <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
@@ -355,9 +357,9 @@
           <table class="table table-sm text-left">
             <thead>
               <tr class="row">
-                <th class="col-4">Name</th>
-                <th class="col-6">Notes</th>
-                <th class="col-2">Date</th>
+                <th class="col-4 border-top-0">Name</th>
+                <th class="col-6 border-top-0">Notes</th>
+                <th class="col-2 border-top-0">Date</th>
               </tr>
             </thead>
             <tbody data-bind="foreach: { data: discipline.results, as: 'result' }">

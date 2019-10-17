@@ -58,7 +58,8 @@ def register(api, cache):
             query = (Event.select(Event, Series, fn.MAX(Race.date).alias('date'))
                           .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                           .join(Race, src=Event)
-                          .order_by(Race.date.desc())
+                          .where(Event.ignore == False)
+                          .order_by(Race.date.desc(), Event.name.asc())
                           .group_by(Event)
                           .limit(6))
             return ([marshal(e, event_with_discipline) for e in query], 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
@@ -90,14 +91,15 @@ def register(api, cache):
         @cache.cached(timeout=cache_timeout)
         def get(self, year):
             disciplines = []
-            for upgrade_discipline in sorted(DISCIPLINE_MAP.keys()):
+            for upgrade_discipline in DISCIPLINE_MAP.keys():
                 query = (Event.select(Event, Series, fn.MAX(Race.date).alias('date'))
                               .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                               .join(Race, src=Event)
+                              .where(Event.ignore == False)
                               .where(Event.year == year)
                               .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
                               .group_by(Event, Series)
-                              .order_by(fn.MAX(Race.date).desc(), Event.id.desc()))
+                              .order_by(fn.MAX(Race.date).desc(), Event.name.asc()))
                 data = {'name': upgrade_discipline,
                         'display': upgrade_discipline.split('_')[0].title(),
                         'events': query,

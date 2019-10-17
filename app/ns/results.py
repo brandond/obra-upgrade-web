@@ -4,9 +4,9 @@ from email.utils import formatdate
 from time import time
 
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import (Event, Person, Points, Race,
-                                            Result, Series, db)
-from peewee import JOIN, prefetch
+from obra_upgrade_calculator.models import (Event, PendingUpgrade, Person, ObraPersonSnapshot,
+                                            Points, Race, Result, Series, db)
+from peewee import JOIN
 
 from flask_restplus import Resource, fields, marshal
 
@@ -16,6 +16,10 @@ cache_timeout = 900
 
 def register(api, cache):
     ns = api.namespace('results', 'Race Results')
+
+    def get_pending(r):
+        if isinstance(r.pending, list) and r.pending:
+            return r.pending[0].upgrade_confirmation.date
 
     def fill_results(pdr):
         if not pdr['results']:
@@ -82,6 +86,7 @@ def register(api, cache):
                        'sum_categories': fields.List(fields.Integer, attribute=lambda r: r.points[0].sum_categories if r.points else None),
                        'notes': fields.String(attribute=lambda r: r.points[0].notes if r.points else None),
                        'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade if r.points else None),
+                       'pending_date': fields.Date(attribute=get_pending),
                        })
 
     # Race with event info
@@ -135,9 +140,11 @@ def register(api, cache):
             try:
                 db_person = Person.get_by_id(id)
                 db_person.disciplines = []
-                for upgrade_discipline in sorted(DISCIPLINE_MAP.keys()):
-                    query = (Result.select(Result, Points, Race, Event, Series)
+                for upgrade_discipline in DISCIPLINE_MAP.keys():
+                    query = (Result.select(Result, Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series,)
                                    .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
+                                   .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
+                                   .join(ObraPersonSnapshot, src=PendingUpgrade, join_type=JOIN.LEFT_OUTER)
                                    .join(Race, src=Result)
                                    .join(Event, src=Race)
                                    .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
@@ -146,7 +153,7 @@ def register(api, cache):
                                    .order_by(Race.date.desc(), Race.created.desc()))
                     db_person.disciplines.append({'name': upgrade_discipline,
                                                   'display': upgrade_discipline.split('_')[0].title(),
-                                                  'results': prefetch(query, Points, Race, Event, Series),
+                                                  'results': query.prefetch(Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series),
                                                   })
                 return (marshal(db_person, person_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
             except Person.DoesNotExist:
@@ -168,6 +175,9 @@ def register(api, cache):
                 event.races = (event.races
                                     .order_by(Race.name.asc())
                                     .prefetch(Result, Points, Person))
-                return (marshal(event, event_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
+                if event.races:
+                    return (marshal(event, event_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
+                else:
+                    raise Event.DoesNotExist()
             except Event.DoesNotExist:
                 return ({}, 404, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
