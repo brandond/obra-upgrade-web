@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import date
 
-from obra_upgrade_calculator import data, scrapers, upgrades
+from obra_upgrade_calculator import data, models, scrapers, upgrades
 
 import uwsgi
 from uwsgidecorators import rbtimer
@@ -28,21 +28,24 @@ def scrape_events(num):
         years = range(cur_year - 6, cur_year + 1)
         full_scrape_done = True
 
-    changed = False
     for discipline in data.DISCIPLINE_MAP.keys():
-        for year in years:
-            scrapers.scrape_year(year, discipline)
-            scrapers.scrape_parents(year, discipline)
-            scrapers.clean_events(year, discipline)
+        clear_cache = False
 
-        if scrapers.scrape_new(discipline):
-            if upgrades.recalculate_points(discipline, incremental=True):
-                upgrades.sum_points(discipline)
-                upgrades.confirm_pending_upgrades(discipline)
-                changed = True
+        # Do the entire discipline re-scrape in a transaction
+        with models.db.atomic('IMMEDIATE'):
+            for year in years:
+                scrapers.scrape_year(year, discipline)
+                scrapers.scrape_parents(year, discipline)
+                scrapers.clean_events(year, discipline)
 
-    if changed:
-        uwsgi.cache_clear('default')
+            if scrapers.scrape_new(discipline):
+                if upgrades.recalculate_points(discipline, incremental=True):
+                    upgrades.sum_points(discipline)
+                    upgrades.confirm_pending_upgrades(discipline)
+                    clear_cache = True
+
+        if clear_cache:
+            uwsgi.cache_clear('default')
 
 
 @rbtimer(1800, target='spooler')
@@ -51,13 +54,16 @@ def scrape_recent(num):
         logger.debug('Recent event re-scrape disabled by NO_SCRAPE')
         return
 
-    changed = False
     for discipline in data.DISCIPLINE_MAP.keys():
-        if scrapers.scrape_recent(discipline, 3):
-            if upgrades.recalculate_points(discipline, incremental=True):
-                upgrades.sum_points(discipline)
-                upgrades.confirm_pending_upgrades(discipline)
-                changed = True
+        clear_cache = False
 
-    if changed:
-        uwsgi.cache_clear('default')
+        # Do the entire discipline update in a transaction
+        with models.db.atomic('IMMEDIATE'):
+            if scrapers.scrape_recent(discipline, 3):
+                if upgrades.recalculate_points(discipline, incremental=True):
+                    upgrades.sum_points(discipline)
+                    upgrades.confirm_pending_upgrades(discipline)
+                    clear_cache = True
+
+        if clear_cache:
+            uwsgi.cache_clear('default')

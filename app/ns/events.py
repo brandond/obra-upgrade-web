@@ -3,7 +3,7 @@ from email.utils import formatdate
 from time import time
 
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import Event, Race, Series, db
+from obra_upgrade_calculator.models import Event, Race, Series
 from peewee import JOIN, fn
 
 from flask_restplus import Resource, fields, marshal
@@ -52,7 +52,6 @@ def register(api, cache):
         """
         Get recent events from any year and discipline, sorted by date
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             query = (Event.select(Event, Series, fn.MAX(Race.date).alias('date'))
@@ -71,7 +70,6 @@ def register(api, cache):
         """
         Get a list of years that we have data for
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             query = (Event.select(fn.DISTINCT(Event.year))
@@ -87,7 +85,6 @@ def register(api, cache):
         """
         Get a list of events for this year, grouped by discipline
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, year):
             disciplines = []
@@ -98,8 +95,8 @@ def register(api, cache):
                               .where(Event.ignore == False)
                               .where(Event.year == year)
                               .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
-                              .group_by(Event, Series)
-                              .order_by(fn.MAX(Race.date).desc(), Event.name.asc()))
+                              .group_by(Event)
+                              .order_by(fn.MAX(Race.date).desc(), Series.name.asc(), Event.name.asc()))
                 data = {'name': upgrade_discipline,
                         'display': upgrade_discipline.split('_')[0].title(),
                         'events': query,

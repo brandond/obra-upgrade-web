@@ -3,4 +3,3 @@ flask
 flask_caching
 flask_restplus
 uwsgidecorators
-obra-upgrade-calculator

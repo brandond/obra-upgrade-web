@@ -4,9 +4,10 @@ from email.utils import formatdate
 from time import time
 
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import (Event, PendingUpgrade, Person, ObraPersonSnapshot,
-                                            Points, Race, Result, Series, db)
-from peewee import JOIN, Window, fn, Select, Entity
+from obra_upgrade_calculator.models import (Event, ObraPersonSnapshot,
+                                            PendingUpgrade, Person, Points,
+                                            Race, Result, Series)
+from peewee import JOIN, Entity, Select, Window, fn
 
 from flask_restplus import Resource, fields, marshal
 
@@ -106,7 +107,6 @@ def register(api, cache):
         """
         Get pending upgrades, grouped by discipline, sorted by category and points
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             cur_year = date.today().year
@@ -169,7 +169,6 @@ def register(api, cache):
         """
         Get the top pending upgrades, sorted by category and points
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             cur_year = date.today().year
@@ -222,7 +221,6 @@ def register(api, cache):
         """
         Get historical upgrades, grouped by discipline, sorted by date, category, name
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             cur_year = date.today().year
@@ -271,7 +269,6 @@ def register(api, cache):
         """
         Get recent historical upgrades, sorted by date, category, name
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self):
             cur_year = date.today().year

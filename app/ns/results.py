@@ -4,8 +4,9 @@ from email.utils import formatdate
 from time import time
 
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
-from obra_upgrade_calculator.models import (Event, PendingUpgrade, Person, ObraPersonSnapshot,
-                                            Points, Race, Result, Series, db)
+from obra_upgrade_calculator.models import (Event, ObraPersonSnapshot,
+                                            PendingUpgrade, Person, Points,
+                                            Race, Result, Series)
 from peewee import JOIN
 
 from flask_restplus import Resource, fields, marshal
@@ -134,7 +135,6 @@ def register(api, cache):
         """
         Return results for a person.
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, id):
             try:
@@ -167,7 +167,6 @@ def register(api, cache):
         """
         Return results for an event.
         """
-        @db.atomic()
         @cache.cached(timeout=cache_timeout)
         def get(self, id):
             try:

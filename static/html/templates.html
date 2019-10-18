@@ -31,8 +31,8 @@
               <td class="col-4 col-sm-3">
                 <a class="text-light stretched-link" data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a>
               </td>
-              <td class="col-6 col-sm-5 text-light" data-bind="text: result.sum_value + ' Points'">Points</td>
-              <td class="col-2 col-sm-2 text-light" data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)">Category</td>
+              <td class="col-5 col-sm-5 text-light" data-bind="text: result.sum_value + ' Points'">Points</td>
+              <td class="col-3 col-sm-2 text-light" data-bind="text: Math.min(...result.sum_categories) + ' -> ' + (Math.min(...result.sum_categories) - 1)">Category</td>
               <td class="      col-sm-2 d-none d-sm-table-cell text-light" data-bind="text: result.race.event.discipline.display">Discipline</td>
             </tr>
           </tbody>
@@ -49,8 +49,8 @@
               <td class="col-4 col-sm-3">
                 <a class="text-light stretched-link" data-bind="text: result.person.name, attr: { href: '/person/' + result.person.id }">Name</a>
               </td>
-              <td class="col-6 col-sm-5 text-light" data-bind="text: result.notes.split(';')[0]">Notes</td>
-              <td class="col-2 col-sm-2 text-light text-nowrap" data-bind="text: result.race.date">Date</td>
+              <td class="col-5 col-sm-5 text-light" data-bind="text: result.notes.split(';')[0]">Notes</td>
+              <td class="col-3 col-sm-2 text-light text-nowrap" data-bind="text: result.race.date">Date</td>
               <td class="      col-sm-2 d-none d-sm-table-cell text-light" data-bind="text: result.race.event.discipline.display">Discipline</td>
             </tr>
           </tbody>
