@@ -21,15 +21,30 @@ var pageViewModel = {
   searchSubmit: function(form){
     page('/search?' + $(form).serialize());
   },
+  anchorClick: function(tabData, e){
+    console.log('anchorClick');
+    page.replace(e.target.href, undefined, null, false);
+    scrollToHash();
+  },
+  changeActivePanel: function(tabData, e){
+    console.log('changeActivePanel');
+    var $root = this;
+    $root.activePanel(tabData);
+    page.replace(e.target.href, undefined, null, false);
+  },
   setActivePanel: function(tabData, element){
     var findFunc = function(){return false};
     var $root = this;
-    console.log('Setting active panel for ' + $root.pageTemplate());
     switch($root.pageTemplate()) {
       case 'person':
       case 'upgrades':
         findFunc = function(){
-          if (this.results.length > 0){
+          if ($root.pageContext().hash){
+            if ($root.pageContext().hash == this.name){
+              $root.activePanel(this);
+              return false;
+            }
+          } else if (this.results.length > 0){
             $root.activePanel(this);
             return false;
           }
@@ -37,7 +52,12 @@ var pageViewModel = {
         break;
       case 'events':
         findFunc = function(){
-          if (this.events.length > 0){
+          if ($root.pageContext().hash){
+            if ($root.pageContext().hash == this.name){
+              $root.activePanel(this);
+              return false;
+            }
+          } else if (this.events.length > 0){
             $root.activePanel(this);
             return false;
           }
@@ -49,7 +69,7 @@ var pageViewModel = {
 };
 
 function switchPage(context, next){
-  console.log('switchPage ' + (context.prevcontext && context.prevcontext.pathname) + ' -> ' + context.pathname , arguments);
+  console.log('switchPage to ' + context.path , arguments);
   $('.navbar-collapse').collapse('hide');
   pageViewModel.pageContext(context);
   pageViewModel.pageTemplate(context.pathname.split('/')[1] || 'index');
@@ -57,13 +77,10 @@ function switchPage(context, next){
 };
 
 function scrollToHash(){
-  var hash = pageViewModel.pageContext() && pageViewModel.pageContext().hash
-  if (hash){
-    var offset = $('#' + hash).offset();
-    if (offset){
-      window.scrollTo(0, offset.top - 55);
-      return;
-    }
+  console.log('scrollToHash', $(window.location.hash)[0]);
+  if ($(window.location.hash).length){
+    $(window.location.hash)[0].scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start'});
+    return;
   }
   window.scrollTo(0, 0);
 }
@@ -95,6 +112,7 @@ function doUpgrades(context, next){
 }
 
 function doEvent(context, next){
+  pageViewModel.eventResults(undefined);
   $.get('/api/v1/results/event/' + context.params.id, function(results){
     pageViewModel.eventResults(results);
   }).fail(function(){
@@ -118,6 +136,7 @@ function doEvents(context, next){
 };
 
 function doEventsYear(context, next){
+  pageViewModel.yearEvents(undefined);
   $.get('/api/v1/events/years/' + context.params.year + '/', function(results){
     pageViewModel.yearEvents(results);
   }).fail(function(){
@@ -130,6 +149,7 @@ function doEventsYear(context, next){
 };
 
 function doPerson(context, next){
+  pageViewModel.personResults(undefined);
   $.get('/api/v1/results/person/' + context.params.id, function(results){
     pageViewModel.personResults(results);
   }).fail(function(){
@@ -139,6 +159,7 @@ function doPerson(context, next){
 };
 
 function doSearch(context, next){
+  pageViewModel.searchResults([]);
   $.get('/api/v1/people/?' + context.querystring, function(results){
     pageViewModel.searchResults(results);
   })

@@ -6,7 +6,8 @@ from time import time
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
 from obra_upgrade_calculator.models import (Event, ObraPersonSnapshot,
                                             PendingUpgrade, Person, Points,
-                                            Race, Result, Series)
+                                            Quality, Race, Rank, Result,
+                                            Series)
 from peewee import JOIN
 
 from flask_restplus import Resource, fields, marshal
@@ -75,6 +76,7 @@ def register(api, cache):
                      'date': fields.Date,
                      'starters': fields.Integer,
                      'categories': fields.List(fields.Integer),
+                     'quality': fields.Integer(attribute=lambda r: r.quality[0].value if r.quality else None)
                      })
 
     result = ns.model('Result',
@@ -87,6 +89,7 @@ def register(api, cache):
                        'sum_categories': fields.List(fields.Integer, attribute=lambda r: r.points[0].sum_categories if r.points else None),
                        'notes': fields.String(attribute=lambda r: r.points[0].notes if r.points else None),
                        'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade if r.points else None),
+                       'rank': fields.Integer(attribute=lambda r: r.rank[0].value if r.rank else None),
                        'pending_date': fields.Date(attribute=get_pending),
                        })
 
@@ -141,19 +144,21 @@ def register(api, cache):
                 db_person = Person.get_by_id(id)
                 db_person.disciplines = []
                 for upgrade_discipline in DISCIPLINE_MAP.keys():
-                    query = (Result.select(Result, Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series,)
+                    query = (Result.select(Result, Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series, Rank, Quality)
                                    .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
                                    .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
                                    .join(ObraPersonSnapshot, src=PendingUpgrade, join_type=JOIN.LEFT_OUTER)
                                    .join(Race, src=Result)
                                    .join(Event, src=Race)
                                    .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
+                                   .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                                   .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
                                    .where(Result.person == db_person)
                                    .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
                                    .order_by(Race.date.desc(), Race.created.desc()))
                     db_person.disciplines.append({'name': upgrade_discipline,
                                                   'display': upgrade_discipline.split('_')[0].title(),
-                                                  'results': query.prefetch(Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series),
+                                                  'results': query.prefetch(Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series, Rank, Quality),
                                                   })
                 return (marshal(db_person, person_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
             except Person.DoesNotExist:
@@ -173,7 +178,7 @@ def register(api, cache):
                 event = Event.get_by_id(id)
                 event.races = (event.races
                                     .order_by(Race.name.asc())
-                                    .prefetch(Result, Points, Person))
+                                    .prefetch(Result, Points, Person, Rank, Quality))
                 if event.races:
                     return (marshal(event, event_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
                 else:

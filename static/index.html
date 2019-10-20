@@ -24,13 +24,12 @@
 
     <!-- Web app manifest, even though we're not a real PWA -->
     <link rel="manifest" href="/json/manifest.json">
-    <base href="/">
 
     <title>OBRA Hacks</title>
   </head>
   <body id="top">
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-      <a class="navbar-brand" href="#">OBRA Hacks</a>
+      <a class="navbar-brand" href="/">OBRA Hacks</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-main" aria-controls="nav-main" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -54,9 +53,9 @@
       </div>
     </nav>
 
-    <main role="main" data-bind="if: pageTemplate">
+    <main role="main" data-bind="if: pageTemplate()">
       <div class="site-content p-0 container"
-           data-bind="template: { name: pageTemplate }, childrenComplete: scrollToHash"></div>
+           data-bind="template: { name: pageTemplate }"></div>
     </main>
 
     <!-- Optional JavaScript -->

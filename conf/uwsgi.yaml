@@ -19,12 +19,27 @@ uwsgi:
   thunder-lock: True
   chdir: /app
   virtualenv: /app/venv
-  route: ^/$ static:/app/static/index.html
-  route: ^/notifications static:/app/static/index.html
-  route: ^/upgrades static:/app/static/index.html
-  route: ^/person static:/app/static/index.html
-  route: ^/search static:/app/static/index.html
-  route: ^/event static:/app/static/index.html
+  route: ^/$ goto:index
+  route: ^/notifications goto:index-view
+  route: ^/upgrades goto:index-view
+  route: ^/person goto:index-view
+  route: ^/search goto:index-view
+  route: ^/event goto:index-view
+  route: .* last:
+  route-label: index
+  route: .* addheader:Link: </api/v1/events/recent/>; rel=preload; crossorigin=use-credentials
+  route: .* addheader:Link: </api/v1/upgrades/recent/top/>; rel=preload; crossorigin=use-credentials
+  route: .* addheader:Link: </api/v1/upgrades/pending/top/>; rel=preload; crossorigin=use-credentials
+  route: .* goto:index-view
+  route: .* last:
+  route-label: index-view
+  route: .* addheader:Link: </css/index.css>; rel=preload; as=style
+  route: .* addheader:Link: </js/index.js>; rel=preload; as=script
+  route: .* addheader:Link: </js/serviceworker.js>; rel=preload; as=serviceworker
+  route: .* addheader:Link: </json/manifest.json>; rel=preload; as=manifest
+  route: .* addheader:Link: </html/templates.html>; rel=preload; as=document
+  route: .* static:/app/static/index.html
+  route: .* last:
   check-static: /app/static
   static-cache-paths: 900
   static-cache-paths-name: paths

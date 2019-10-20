@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import date
 
-from obra_upgrade_calculator import data, models, scrapers, upgrades
+from obra_upgrade_calculator import data, models, rankings, scrapers, upgrades
 
 import uwsgi
 from uwsgidecorators import rbtimer
@@ -40,6 +40,7 @@ def scrape_events(num):
 
             if scrapers.scrape_new(discipline):
                 if upgrades.recalculate_points(discipline, incremental=True):
+                    rankings.calculate_race_ranks(discipline, incremental=True)
                     upgrades.sum_points(discipline)
                     upgrades.confirm_pending_upgrades(discipline)
                     clear_cache = True

@@ -1,5 +1,5 @@
 body {
-  padding-top: 5rem;
+  padding-top: 4rem;
 }
 
 .site-content {
@@ -9,4 +9,13 @@ body {
 
 html {
   overflow-y: scroll;
+}
+
+span.race-anchor {
+    border-top: 4rem solid transparent;
+    margin-top: -4rem;
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+    pointer-events: none;
 }

@@ -6,7 +6,8 @@ from time import time
 from obra_upgrade_calculator.data import DISCIPLINE_MAP
 from obra_upgrade_calculator.models import (Event, ObraPersonSnapshot,
                                             PendingUpgrade, Person, Points,
-                                            Race, Result, Series)
+                                            Quality, Race, Rank, Result,
+                                            Series)
 from peewee import JOIN, Entity, Select, Window, fn
 
 from flask_restplus import Resource, fields, marshal
@@ -37,6 +38,7 @@ def register(api, cache):
                        'sum_categories': fields.List(fields.Integer, attribute=lambda r: r.points[0].sum_categories),
                        'notes': fields.String(attribute=lambda r: r.points[0].notes),
                        'needs_upgrade': fields.Boolean(attribute=lambda r: r.points[0].needs_upgrade),
+                       'rank': fields.Integer(attribute=lambda r: r.rank[0].value if r.rank else None),
                        'pending_date': fields.Date(attribute=get_pending),
                        })
 
@@ -66,6 +68,7 @@ def register(api, cache):
                      'date': fields.Date,
                      'starters': fields.Integer,
                      'categories': fields.List(fields.Integer),
+                     'quality': fields.Integer(attribute=lambda r: r.quality[0].value if r.quality else None)
                      })
 
     discipline = ns.model('Discipline',
@@ -140,13 +143,17 @@ def register(api, cache):
                                        Person,
                                        Points,
                                        PendingUpgrade,
-                                       ObraPersonSnapshot)
+                                       ObraPersonSnapshot,
+                                       Rank,
+                                       Quality)
                                .join(Race, src=Result)
                                .join(Event, src=Race)
                                .join(Person, src=Result)
                                .join(Points, src=Result)
                                .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
                                .join(ObraPersonSnapshot, src=PendingUpgrade, join_type=JOIN.LEFT_OUTER)
+                               .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                               .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
                                .where(Result.id << latest_results)
                                .where(Points.needs_upgrade == True)
                                .order_by(Points.sum_categories.asc(),
@@ -155,7 +162,7 @@ def register(api, cache):
                 disciplines.append({'name': upgrade_discipline,
                                     'display': upgrade_discipline.split('_')[0].title(),
                                     'results': query.prefetch(Race, Event, Person,
-                                                              Points, PendingUpgrade, ObraPersonSnapshot),
+                                                              Points, PendingUpgrade, ObraPersonSnapshot, Rank, Quality),
                                     })
 
             return ([marshal(d, discipline_results) for d in disciplines],
@@ -198,19 +205,23 @@ def register(api, cache):
                                    Event,
                                    Series,
                                    Person,
-                                   Points)
+                                   Points,
+                                   Rank,
+                                   Quality)
                            .join(Race, src=Result)
                            .join(Event, src=Race)
                            .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                            .join(Person, src=Result)
                            .join(Points, src=Result)
+                           .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                           .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
                            .where(Result.id << latest_results)
                            .where(Points.needs_upgrade == True)
                            .order_by(Points.sum_categories.asc(),
                                      Points.sum_value.desc())
                            .limit(6))
 
-            return ([marshal(r, result_with_person_and_race_with_event) for r in query.prefetch(Race, Event, Series, Person, Points)],
+            return ([marshal(r, result_with_person_and_race_with_event) for r in query.prefetch(Race, Event, Series, Person, Points, Rank, Quality)],
                     200,
                     {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
 
@@ -235,7 +246,9 @@ def register(api, cache):
                                        Person,
                                        Points,
                                        PendingUpgrade,
-                                       ObraPersonSnapshot)
+                                       ObraPersonSnapshot,
+                                       Rank,
+                                       Quality)
                                .join(Race, src=Result)
                                .join(Event, src=Race)
                                .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
@@ -243,6 +256,8 @@ def register(api, cache):
                                .join(Points, src=Result)
                                .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
                                .join(ObraPersonSnapshot, src=PendingUpgrade, join_type=JOIN.LEFT_OUTER)
+                               .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                               .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
                                .where(Race.date >= start_date)
                                .where(~(Race.name.contains('junior')))
                                .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
@@ -255,7 +270,7 @@ def register(api, cache):
                 disciplines.append({'name': upgrade_discipline,
                                     'display': upgrade_discipline.split('_')[0].title(),
                                     'results': query.prefetch(Race, Event, Series, Person,
-                                                              Points, PendingUpgrade, ObraPersonSnapshot),
+                                                              Points, PendingUpgrade, ObraPersonSnapshot, Rank, Quality),
                                     })
 
             return ([marshal(d, discipline_results) for d in disciplines],
@@ -279,12 +294,16 @@ def register(api, cache):
                                    Event,
                                    Series,
                                    Person,
-                                   Points)
+                                   Points,
+                                   Rank,
+                                   Quality)
                            .join(Race, src=Result)
                            .join(Event, src=Race)
                            .join(Series, src=Event, join_type=JOIN.LEFT_OUTER)
                            .join(Person, src=Result)
                            .join(Points, src=Result)
+                           .join(Rank, src=Result, join_type=JOIN.LEFT_OUTER)
+                           .join(Quality, src=Race, join_type=JOIN.LEFT_OUTER)
                            .where(Race.date >= start_date)
                            .where(~(Race.name.contains('Junior')))
                            .where(Points.notes.contains('upgraded') | Points.notes.contains('downgraded'))
@@ -294,6 +313,6 @@ def register(api, cache):
                                      Person.first_name.asc())
                            .limit(6))
 
-            return ([marshal(r, result_with_person_and_race_with_event) for r in query.prefetch(Race, Event, Series, Person, Points)],
+            return ([marshal(r, result_with_person_and_race_with_event) for r in query.prefetch(Race, Event, Series, Person, Points, Rank, Quality)],
                     200,
                     {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})
