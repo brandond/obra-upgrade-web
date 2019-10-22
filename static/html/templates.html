@@ -115,7 +115,7 @@
         <h5 class="card-title mb-1">
           <a data-bind="text: race.name, attr: { href: 'https://obra.org/events/' + event.id + '#race_' + race.id, title: 'View on OBRA.org' }">Race Name</a>
         </h5>
-        <div data-bind="text: race.quality && race.quality != -1 && 'Race Quality: ' + race.quality"></div>
+        <div data-bind="text: race.quality > 0 && 'Race Quality: ' + race.quality || '' "></div>
         <div class="container bg-white mb-2">
           <table class="table table-sm text-left mb-0">
             <thead>
@@ -172,6 +172,65 @@
   </div>
 </script>
 
+<script type="text/html" id="ranks">
+  <div class="container bg-white mb-2 col-sm-12 col-md-10 col-lg-8 mx-auto">
+    <div class="card mb-2">
+      <div class="container small text-nowrap">
+        Only categorized and singlespeed races are considered.
+        <span class="d-inline d-md-none"><br></span>
+        Open age-graded fields <strong>are not</strong> included.
+      </div>
+    </div>
+
+    <div class="spinner-border" role="status" data-bind="hidden: ranksResults().length"><span class="sr-only">Loading...</span></div>
+
+    <div data-bind="visible: ranksResults().length">
+      <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
+          data-bind="foreach: { data: ranksResults, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, ranksResults())">
+        <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
+          <a class="nav-link" data-togle="tab" role="tab"
+             data-bind="click: $root.changeActivePanel.bind($root),
+                        text: discipline.display,
+                        css: { active: discipline.name === $root.activePanel(), disabled: discipline.ranks.length == 0 },
+                        attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">
+            Discipline
+          </a>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="discipline-tab-content"
+           data-bind="foreach: { data: ranksResults, as: 'discipline' }">
+        <div class="card bg-light tab-pane fade border-top-0" role="tabpanel"
+             data-bind="attr: { 'id': discipline.name },
+                        css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
+          <div class="container bg-white">
+            <table class="table table-sm text-left">
+              <thead>
+                <tr class="row">
+                  <th class="col-2 col-sm-1 border-top-0">#</th>
+                  <th class="col-3 col-sm-2 border-top-0 text-nowrap">Rank Pts</th>
+                  <th class="col-7 col-sm-3 border-top-0 ">Name</th>
+                  <th class="      col-sm-6 border-top-0 d-none d-sm-block">Team</th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: { data: discipline.ranks, as: 'person' }">
+                <tr class="row">
+                  <td class="col-2 col-sm-1" data-bind="text: person.place">#</td>
+                  <td class="col-3 col-sm-2 text-nowrap" data-bind="text: person.rank">Rank Pts</td>
+                  <td class="col-7 col-sm-3">
+                    <a data-bind="text: person.name, attr: { href: '/person/' + id + '#' + discipline.name}">Name</a>
+                  </td>
+                  <td class="      col-sm-6 d-none d-sm-block" data-bind="text: person.team_name">Team</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
 <script type="text/html" id="events">
   <ul class="nav nav-tabs justify-content-center" id="discipline-tabs" role="tablist"
       data-bind="foreach: { data: eventsYears, as: 'year' }">
@@ -205,7 +264,7 @@
         <table class="table table-sm text-left">
           <thead>
             <tr class="row">
-              <th class="col-9 col-sm-5 border-top-0 ">Name</th>
+              <th class="col-9 col-sm-5 border-top-0">Name</th>
               <th class="col-3 col-sm-2 border-top-0 text-nowrap">Date</th>
               <th class="col-0 col-sm-5 border-top-0 d-none d-sm-table-cell">Series</th>
             </tr>
@@ -233,10 +292,14 @@
         data-bind="foreach: { data: person.disciplines, as: 'discipline' }, childrenComplete: $root.setActivePanel.bind($root, person.disciplines)">
       <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 2 }">
         <a class="nav-link" data-togle="tab" role="tab"
-           data-bind="text: discipline.display,
-                      click: $root.changeActivePanel.bind($root),
+           data-bind="click: $root.changeActivePanel.bind($root),
                       css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
-                      attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
+                      attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">
+          <div data-bind="text: discipline.display">
+            Discipline
+          </div>
+          <small class="text-muted rank" data-bind="text: discipline.rank">Rank</small>
+        </a>
       </li>
     </ul>
 

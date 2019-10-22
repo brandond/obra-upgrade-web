@@ -8,6 +8,7 @@ from obra_upgrade_calculator.models import (Event, ObraPersonSnapshot,
                                             PendingUpgrade, Person, Points,
                                             Quality, Race, Rank, Result,
                                             Series)
+from obra_upgrade_calculator.rankings import get_ranks
 from peewee import JOIN
 
 from flask_restplus import Resource, fields, marshal
@@ -117,6 +118,7 @@ def register(api, cache):
     discipline_results = ns.model('DisciplineResultsWithRace',
                                          {'name': fields.String,
                                           'display': fields.String,
+                                          'rank': fields.Integer,
                                           'results': fields.List(fields.Nested(result_with_race), attribute=fill_results),
                                           })
 
@@ -144,6 +146,7 @@ def register(api, cache):
                 db_person = Person.get_by_id(id)
                 db_person.disciplines = []
                 for upgrade_discipline in DISCIPLINE_MAP.keys():
+                    ranks = get_ranks(upgrade_discipline, None, [id])
                     query = (Result.select(Result, Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series, Rank, Quality)
                                    .join(Points, src=Result, join_type=JOIN.LEFT_OUTER)
                                    .join(PendingUpgrade, src=Result, join_type=JOIN.LEFT_OUTER)
@@ -156,8 +159,10 @@ def register(api, cache):
                                    .where(Result.person == db_person)
                                    .where(Event.discipline << DISCIPLINE_MAP[upgrade_discipline])
                                    .order_by(Race.date.desc(), Race.created.desc()))
+
                     db_person.disciplines.append({'name': upgrade_discipline,
                                                   'display': upgrade_discipline.split('_')[0].title(),
+                                                  'rank': ranks[id],
                                                   'results': query.prefetch(Points, PendingUpgrade, ObraPersonSnapshot, Race, Event, Series, Rank, Quality),
                                                   })
                 return (marshal(db_person, person_results), 200, {'Expires': formatdate(timeval=time() + cache_timeout, usegmt=True)})

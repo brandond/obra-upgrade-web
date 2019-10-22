@@ -25,6 +25,7 @@ uwsgi:
   route: ^/person goto:index-view
   route: ^/search goto:index-view
   route: ^/event goto:index-view
+  route: ^/ranks goto:index-view
   route: .* last:
   route-label: index
   route: .* addheader:Link: </api/v1/events/recent/>; rel=preload; crossorigin=use-credentials

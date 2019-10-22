@@ -19,3 +19,8 @@ span.race-anchor {
     background-clip: padding-box;
     pointer-events: none;
 }
+
+small.rank {
+  display: block;
+  margin-top: -0.6rem;
+}

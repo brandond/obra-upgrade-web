@@ -12,6 +12,7 @@ var pageViewModel = {
   searchResults: ko.observableArray(),
   personResults: ko.observable(),
   eventResults: ko.observable(),
+  ranksResults: ko.observableArray(),
   yearEvents: ko.observable(),
   // Generic data loaded at all times
   upgradesPending: ko.observableArray(),
@@ -55,6 +56,20 @@ var pageViewModel = {
               return false;
             }
           } else if (this.events.length > 0){
+            $root.activePanel(this.name);
+            page.replace(window.location.pathname + '#' + this.name, undefined, false, false);
+            return false;
+          }
+        }
+        break;
+      case 'ranks':
+        findFunc = function(){
+          if (window.location.hash){
+            if (window.location.hash == '#' + this.name){
+              $root.activePanel(this.name);
+              return false;
+            }
+          } else if (this.ranks.length > 0){
             $root.activePanel(this.name);
             page.replace(window.location.pathname + '#' + this.name, undefined, false, false);
             return false;
@@ -164,17 +179,33 @@ function doSearch(context, next){
   next();
 };
 
+function doRanks(context, next){
+  pageViewModel.ranksResults([]);
+  $.get('/api/v1/ranks/', function(results){
+    pageViewModel.ranksResults(results);
+  }).fail(function(){
+    page('/');
+  });
+  next();
+};
+
+function doNotifications(context, next){
+  next();
+}
+
 window.addEventListener('load', function() {
   $.ajaxSetup({traditional: true});
 
-  page('/', doIndex, switchPage);
-  page('/search*', doSearch, switchPage);
-  page('/events', doEvents, switchPage);
-  page('/events/:year', doEventsYear, switchPage);
-  page('/event/:id', doEvent, switchPage);
-  page('/notifications', switchPage);
-  page('/person/:id', doPerson, switchPage);
-  page('/upgrades/:type', doUpgrades, switchPage);
+  page('/', doIndex);
+  page('/search*', doSearch);
+  page('/events', doEvents);
+  page('/events/:year', doEventsYear);
+  page('/event/:id', doEvent);
+  page('/ranks', doRanks);
+  page('/notifications', doNotifications);
+  page('/person/:id', doPerson);
+  page('/upgrades/:type', doUpgrades);
+  page('*', switchPage);
 
   $.get('/html/templates.html', function(templates){
     $('body').append(templates);
