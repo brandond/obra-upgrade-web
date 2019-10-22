@@ -1,5 +1,7 @@
 'use strict';
 
+var baseTitle;
+
 var pageViewModel = {
   // Page display state vars
   pageLocation: ko.observable(),
@@ -108,6 +110,8 @@ function doIndex(context, next){
   $.get('/api/v1/upgrades/recent/top/', function(upgrades){
     pageViewModel.upgradesRecent(upgrades);
   });
+
+  document.title = baseTitle;
   next();
 }
 
@@ -121,16 +125,20 @@ function doUpgrades(context, next){
       pageViewModel.upgradesRecentResults(results);
     });
   }
+  document.title = baseTitle + ': Upgrades';
   next();
 }
 
 function doEvent(context, next){
   pageViewModel.eventResults(undefined);
+
   $.get('/api/v1/results/event/' + context.params.id, function(results){
     pageViewModel.eventResults(results);
+    document.title = baseTitle + ': Results: ' + results.year + ': ' +  results.name;
   }).fail(function(){
     page('/events');
   });
+
   next();
 };
 
@@ -141,6 +149,8 @@ function doEvents(context, next){
     page('/');
   });
 
+  document.title = baseTitle + ': Events';
+
   ko.when(function(){
     return pageViewModel.eventsYears().length != 0;
   }, function(){
@@ -150,14 +160,18 @@ function doEvents(context, next){
 
 function doEventsYear(context, next){
   pageViewModel.yearEvents(undefined);
+
   $.get('/api/v1/events/years/' + context.params.year + '/', function(results){
     pageViewModel.yearEvents(results);
   }).fail(function(){
     page('/events');
   });
+
   $.get('/api/v1/events/years/', function(years){
     pageViewModel.eventsYears(years);
   });
+
+  document.title = baseTitle + ': Events: ' + context.params.year;
   next();
 };
 
@@ -165,6 +179,7 @@ function doPerson(context, next){
   pageViewModel.personResults(undefined);
   $.get('/api/v1/results/person/' + context.params.id, function(results){
     pageViewModel.personResults(results);
+    document.title = baseTitle + ': Results: ' + results.name;
   }).fail(function(){
     page('/');
   });
@@ -176,6 +191,7 @@ function doSearch(context, next){
   $.get('/api/v1/people/?' + context.querystring, function(results){
     pageViewModel.searchResults(results);
   })
+  document.title = baseTitle + ': Search';
   next();
 };
 
@@ -183,6 +199,7 @@ function doRanks(context, next){
   pageViewModel.ranksResults([]);
   $.get('/api/v1/ranks/', function(results){
     pageViewModel.ranksResults(results);
+    document.title = baseTitle + ': Ranks';
   }).fail(function(){
     page('/');
   });
@@ -190,10 +207,12 @@ function doRanks(context, next){
 };
 
 function doNotifications(context, next){
+  document.title = baseTitle + ': Notifications';
   next();
 }
 
 window.addEventListener('load', function() {
+  baseTitle = document.title;
   $.ajaxSetup({traditional: true});
 
   page('/', doIndex);

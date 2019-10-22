@@ -98,6 +98,13 @@
     <h2><a data-bind="text: event.name, attr: { href: 'https://obra.org/events/' + event.id, title: 'View on OBRA.org' }">Event Name</a></h2>
 
     <div class="col-sm-12 col-md-10 col-lg-8 mx-auto">
+      <div class="card mb-2">
+        <div class="container small">
+        <span data-bind="text: event.races[0].date">Date</span>
+        <span data-bind="text: event.series && ' | Part of the ' + event.series.name">Series</span>
+        </div>
+      </div>
+
       <ul class="nav nav-pills nav-light" data-bind="foreach: { data: event.races, as: 'race' }">
         <li class="nav-item">
           <a class="nav-link px-2 py-0 mx-auto"
@@ -175,7 +182,7 @@
 <script type="text/html" id="ranks">
   <div class="container bg-white mb-2 col-sm-12 col-md-10 col-lg-8 mx-auto">
     <div class="card mb-2">
-      <div class="container small text-nowrap">
+      <div class="container small">
         Only categorized and singlespeed races are considered.
         <span class="d-inline d-md-none"><br></span>
         Open age-graded fields <strong>are not</strong> included.
