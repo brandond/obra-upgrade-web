@@ -62,6 +62,7 @@ def scrape_recent(num):
         with models.db.atomic('IMMEDIATE'):
             if scrapers.scrape_recent(discipline, 3):
                 if upgrades.recalculate_points(discipline, incremental=True):
+                    rankings.calculate_race_ranks(discipline, incremental=True)
                     upgrades.sum_points(discipline)
                     upgrades.confirm_pending_upgrades(discipline)
                     clear_cache = True
