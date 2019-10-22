@@ -102,7 +102,6 @@
         <li class="nav-item">
           <a class="nav-link px-2 py-0 mx-auto"
              data-bind="text: race.name,
-                        click: $root.anchorClick,
                         attr: { href: '#race_' + race.id }">
             Race Name
           </a>
@@ -156,7 +155,7 @@
       </div>
     </div>
     <nav class="nav flex-column bg-dark fixed-bottom">
-      <a class="nav-link py-0" href="#top" data-bind="click: $root.anchorClick">^</a>
+      <a class="nav-link py-0" href="#top">^</a>
     </nav>
   </div>
 </script>
@@ -190,7 +189,7 @@
       <a class="nav-link" data-togle="tab" role="tab"
          data-bind="text: discipline.display,
                     click: $root.changeActivePanel.bind($root),
-                    css: { active: discipline === $root.activePanel(), disabled: discipline.events.length == 0 },
+                    css: { active: discipline.name === $root.activePanel(), disabled: discipline.events.length == 0 },
                     attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
     </li>
   </ul>
@@ -201,7 +200,7 @@
        data-bind="foreach: { data: yearEvents, as: 'discipline' }">
     <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
          data-bind="attr: { 'id': discipline.name },
-                    css: { active: discipline === $root.activePanel(), show: discipline === $root.activePanel() }">
+                    css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
       <div class="container bg-white mb-2">
         <table class="table table-sm text-left">
           <thead>
@@ -236,7 +235,7 @@
         <a class="nav-link" data-togle="tab" role="tab"
            data-bind="text: discipline.display,
                       click: $root.changeActivePanel.bind($root),
-                      css: { active: discipline === $root.activePanel(), disabled: discipline.results.length == 0 },
+                      css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
                       attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
       </li>
     </ul>
@@ -245,7 +244,7 @@
          data-bind="foreach: { data: person.disciplines, as: 'discipline' }">
       <div class="card bg-light tab-pane fade border-top-0" role="tabpanel"
            data-bind="attr: { 'id': discipline.name },
-                      css: { active: discipline === $root.activePanel(), show: discipline === $root.activePanel() }">
+                      css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
         <div class="container bg-white">
           <table class="table table-sm text-left">
             <thead>
@@ -317,7 +316,7 @@
         <a class="nav-link" data-togle="tab" role="tab"
            data-bind="text: discipline.display,
                       click: $root.changeActivePanel.bind($root),
-                      css: { active: discipline === $root.activePanel(), disabled: discipline.results.length == 0 },
+                      css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
                       attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
       </li>
     </ul>
@@ -326,7 +325,7 @@
          data-bind="foreach: { data: upgrades, as: 'discipline' }">
       <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
            data-bind="attr: { 'id': discipline.name },
-                      css: { active: discipline === $root.activePanel(), show: discipline === $root.activePanel() }">
+                      css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
         <div class="container bg-white mb-2"> 
           <table class="table table-sm text-left">
             <thead>
@@ -367,7 +366,7 @@
         <a class="nav-link" data-togle="tab" role="tab"
            data-bind="text: discipline.display,
                       click: $root.changeActivePanel.bind($root),
-                      css: { active: discipline === $root.activePanel(), disabled: discipline.results.length == 0 },
+                      css: { active: discipline.name === $root.activePanel(), disabled: discipline.results.length == 0 },
                       attr: { 'id': discipline.name + '-tab', 'data-target': discipline.name, 'href': '#' + discipline.name }">Discipline</a>
       </li>
     </ul>
@@ -376,7 +375,7 @@
          data-bind="foreach: { data: upgrades, as: 'discipline' }">
       <div class="card bg-light tab-pane fade border-top-0 mb-2" role="tabpanel"
            data-bind="attr: { 'id': discipline.name },
-                      css: { active: discipline === $root.activePanel(), show: discipline === $root.activePanel() }">
+                      css: { active: discipline.name === $root.activePanel(), show: discipline.name === $root.activePanel() }">
         <div class="container bg-white mb-2"> 
           <table class="table table-sm text-left">
             <thead>

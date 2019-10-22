@@ -2,6 +2,7 @@
 
 var pageViewModel = {
   // Page display state vars
+  pageLocation: ko.observable(),
   pageTemplate: ko.observable(),
   pageContext: ko.observable(),
   activePanel: ko.observable(),
@@ -21,16 +22,11 @@ var pageViewModel = {
   searchSubmit: function(form){
     page('/search?' + $(form).serialize());
   },
-  anchorClick: function(tabData, e){
-    console.log('anchorClick');
-    page.replace(e.target.href, undefined, null, false);
-    scrollToHash();
-  },
   changeActivePanel: function(tabData, e){
-    console.log('changeActivePanel');
+    console.log('changeActivePanel', tabData, e);
     var $root = this;
-    $root.activePanel(tabData);
-    page.replace(e.target.href, undefined, null, false);
+    $root.activePanel(tabData.name);
+    window.location.hash = '#' + tabData.name;
   },
   setActivePanel: function(tabData, element){
     var findFunc = function(){return false};
@@ -39,26 +35,28 @@ var pageViewModel = {
       case 'person':
       case 'upgrades':
         findFunc = function(){
-          if ($root.pageContext().hash){
-            if ($root.pageContext().hash == this.name){
-              $root.activePanel(this);
+          if (window.location.hash){
+            if (window.location.hash == '#' + this.name){
+              $root.activePanel(this.name);
               return false;
             }
           } else if (this.results.length > 0){
-            $root.activePanel(this);
+            $root.activePanel(this.name);
+            page.replace(window.location.pathname + '#' + this.name, undefined, false, false);
             return false;
           }
         }
         break;
       case 'events':
         findFunc = function(){
-          if ($root.pageContext().hash){
-            if ($root.pageContext().hash == this.name){
-              $root.activePanel(this);
+          if (window.location.hash){
+            if (window.location.hash == '#' + this.name){
+              $root.activePanel(this.name);
               return false;
             }
           } else if (this.events.length > 0){
-            $root.activePanel(this);
+            $root.activePanel(this.name);
+            page.replace(window.location.pathname + '#' + this.name, undefined, false, false);
             return false;
           }
         }
@@ -72,8 +70,8 @@ function switchPage(context, next){
   console.log('switchPage to ' + context.path , arguments);
   $('.navbar-collapse').collapse('hide');
   pageViewModel.pageContext(context);
+  pageViewModel.pageLocation(context.pathname);
   pageViewModel.pageTemplate(context.pathname.split('/')[1] || 'index');
-  scrollToHash();
 };
 
 function scrollToHash(){
@@ -183,10 +181,19 @@ window.addEventListener('load', function() {
     ko.options.deferUpdates = true;
     ko.applyBindings(pageViewModel);
   }).always(function(){
-    page();
+    page({'popstate': false, 'hashchange': false});
   });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/js/serviceworker.js').then(console.log);
+  }
+});
+
+window.addEventListener('popstate', (e) => {
+  // The built-in popstate hook doesn't detect change and just updates all the time, including on hash changes.
+  if (e.target.location.pathname == pageViewModel.pageLocation()){
+    pageViewModel.activePanel(e.target.location.hash.substr(1));
+  } else {
+    page.replace(e.target.location.pathname, e.state);
   }
 });
