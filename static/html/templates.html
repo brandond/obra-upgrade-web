@@ -361,18 +361,26 @@
 </script>
 
 <script type="text/html" id="upgrades">
-  <ul class="nav nav-tabs justify-content-center" id="type-tabs" role="tablist"
-      data-bind="foreach: { data: ['pending', 'recent'], as: 'type' }">
-    <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 4 }">
-      <a class="nav-link" data-togle="tab" role="tab"
-         data-bind="text: type,
-                    css: { active: $root.pageContext().params.type == type },
-                    attr: { href: '/upgrades/' + type }">Type</a>
-    </li>
-  </ul>
+  <div class="col-sm-12 col-md-10 col-lg-8 mx-auto">
+    <div class="card mb-2">
+      <div class="container small">
+        Upgrades remain pending until confirmed by racing in the more skilled category.
+      </div>
+    </div>
 
-  <div class="container bg-white mb-2 col-md-10 mx-auto" data-bind="if: $root.pageContext().params.type">
-    <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
+    <ul class="nav nav-tabs justify-content-center" id="type-tabs" role="tablist"
+        data-bind="foreach: { data: ['pending', 'recent'], as: 'type' }">
+      <li class="nav-item" data-bind="css: { 'd-none d-sm-block': $index() > 4 }">
+        <a class="nav-link" data-togle="tab" role="tab"
+           data-bind="text: type,
+                      css: { active: $root.pageContext().params.type == type },
+                      attr: { href: '/upgrades/' + type }">Type</a>
+      </li>
+    </ul>
+
+    <div class="container bg-white mb-2" data-bind="if: $root.pageContext().params.type">
+      <div data-bind="template: {name: 'upgrades_' + $root.pageContext().params.type }"></div>
+    </div>
   </div>
 </script>
 
